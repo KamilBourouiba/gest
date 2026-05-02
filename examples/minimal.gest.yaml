@@ -1,0 +1,48 @@
+version: "0.2"
+profile: full
+fps: 60
+time_base: seconds
+units: meters
+coordinate_system:
+  handedness: right
+  up: "+Y"
+  forward: "+Z"
+capabilities:
+  - hierarchy
+  - hermite_tangents
+interpolation_defaults:
+  translation: cubic_hermite
+  rotation: slerp
+  scalar: linear
+space:
+  anchors:
+    world: { t: [0, 0, 0], q: [0, 0, 0, 1] }
+    chest: { parent: world, t: [0, 1.2, 0], q: [0, 0, 0, 1] }
+  named_points:
+    p0: { parent: chest, local: [0, 0, 0.2] }
+    p1: { parent: chest, local: [0.3, 0, 0.1] }
+channels:
+  right_hand:
+    type: articulated
+    parent: chest
+    joint_count: 1
+    joint_value_stride: 3
+    joint_layout: demo_wrist
+    state_enum: [neutral, pinch_a, pinch_b, spread, fist]
+  gaze:
+    type: direction
+    parent: chest
+    representation: unit_vector
+timeline:
+  - t: 0
+    pose:
+      right_hand:
+        joints: { format: raw_float32, values: [0.0, 0.5, 0.0] }
+        state_index: 0
+      gaze: { dir: [0, 0, 1] }
+  - t: 0.5
+    pose:
+      right_hand:
+        joints: { format: raw_float32, values: [0.3, 0.5, 0.2] }
+        state_index: 4
+      gaze: { dir: [0.1, 0, 0.995] }

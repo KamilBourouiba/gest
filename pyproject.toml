@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gest-ir"
+version = "0.2.0"
+description = "Parser, validation, and .gest → .sgm compilation for the gesture IR."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["PyYAML>=6.0"]
+dev = ["jsonschema>=4.20", "PyYAML>=6.0", "pytest>=8.0"]
+
+[project.scripts]
+gest-validate = "gest.cli:main"
+gest-compile = "gest.compile_cli:main"
+gest-dump-sgm = "gest.dump_sgm_cli:main"
+gest-sgm-to-gest = "gest.sgm_to_gest_cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gest"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schema/gest-0.2.schema.json" = "gest/schemas/gest-0.2.schema.json"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
