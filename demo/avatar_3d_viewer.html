@@ -6,7 +6,7 @@
   <title>.gest WebGL 3D Avatar Viewer</title>
   <style>
     html, body { margin: 0; height: 100%; background: #080c14; color: #e8eef8; font: 14px system-ui, sans-serif; overflow: hidden; }
-    #hud { position: fixed; left: 16px; top: 14px; right: 16px; display: flex; gap: 16px; align-items: center; z-index: 2; }
+    #hud { position: fixed; left: 16px; top: 14px; right: 92px; display: flex; gap: 16px; align-items: center; z-index: 2; }
     #hud > div, .panel { background: rgba(10, 14, 22, 0.86); border: 1px solid #263149; padding: 10px 12px; border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,.24); }
     #deck { position: fixed; right: 16px; top: 96px; width: min(390px, calc(100vw - 32px)); display: grid; gap: 12px; z-index: 2; }
     .panel h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #9fffc0; }
@@ -20,6 +20,24 @@
     #bytecode { font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #64d8ff; word-break: break-all; line-height: 1.45; }
     button { background: #9fffc0; color: #071017; border: 0; border-radius: 5px; padding: 8px 12px; font-weight: 700; }
     a.button { display: inline-block; background: #9fffc0; color: #071017; border-radius: 5px; padding: 8px 12px; font-weight: 800; text-decoration: none; }
+    .github-fab {
+      position: fixed;
+      right: 16px;
+      top: 14px;
+      z-index: 4;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 39px;
+      padding: 0 12px;
+      border-radius: 999px;
+      color: #071017;
+      background: #9fffc0;
+      font-weight: 900;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .github-fab svg { width: 18px; height: 18px; fill: currentColor; }
     a.link { color: #9fffc0; text-decoration: none; }
     .proof { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: center; }
     .proof strong { color: #9fffc0; font-size: 28px; }
@@ -29,10 +47,15 @@
   </style>
 </head>
 <body>
+  <a class="github-fab" href="https://github.com/KamilBourouiba/gest" target="_blank" rel="noreferrer" aria-label="View .gest on GitHub">
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 0C3.58 0 0 3.67 0 8.2c0 3.62 2.29 6.69 5.47 7.77.4.08.55-.18.55-.4 0-.2-.01-.86-.01-1.56-2.01.38-2.53-.5-2.69-.96-.09-.24-.48-.96-.82-1.15-.28-.16-.68-.55-.01-.56.63-.01 1.08.59 1.23.84.72 1.24 1.87.89 2.33.68.07-.53.28-.89.51-1.09-1.78-.21-3.64-.91-3.64-4.03 0-.89.31-1.62.82-2.19-.08-.21-.36-1.04.08-2.16 0 0 .67-.22 2.2.84A7.43 7.43 0 0 1 8 3.96c.68 0 1.36.09 2 .27 1.53-1.06 2.2-.84 2.2-.84.44 1.12.16 1.95.08 2.16.51.57.82 1.3.82 2.19 0 3.13-1.87 3.82-3.65 4.03.29.26.54.75.54 1.52 0 1.09-.01 1.97-.01 2.24 0 .22.15.48.55.4A8.08 8.08 0 0 0 16 8.2C16 3.67 12.42 0 8 0Z"/>
+    </svg>
+    GitHub
+  </a>
   <div id="hud">
     <div><strong>.gest Breakthrough Lab</strong><br><span class="muted">IR validation, SGM bytecode, measured stats, 3D playback</span></div>
     <div><button id="play">Play / Pause</button></div>
-    <div><a class="button" href="https://github.com/KamilBourouiba/gest" target="_blank" rel="noreferrer">GitHub</a></div>
     <div><label class="muted">time <input id="scrub" type="range" min="0" max="1.2" step="0.001" value="0"></label></div>
     <div id="status" class="muted">loading xr_dual_hand_arc.gest.json</div>
   </div>
