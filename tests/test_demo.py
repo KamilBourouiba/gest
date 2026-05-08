@@ -60,6 +60,7 @@ def test_webgl_3d_avatar_viewer_exists():
     assert "data/industry-benchmark.json" in html
     assert "https://github.com/KamilBourouiba/gest" in html
     assert "github-fab" in html
+    assert "github-shake" in html
     assert "Industry proof" in html
     assert "viewBox=\"0 0 16 16\"" in html
     assert "gl_PointSize >" not in html
@@ -78,6 +79,7 @@ def test_vercel_landing_page_links_demo_github_and_stats():
     assert "/demo/avatar_3d_viewer" in html
     assert "https://github.com/KamilBourouiba/gest" in html
     assert "github-fab" in html
+    assert "github-shake" in html
     assert "viewBox=\"0 0 16 16\"" in html
     assert "27/28" in html
     assert "1,562 B" in html
@@ -90,6 +92,7 @@ def test_hosted_industry_benchmark_page_exists():
     assert "Back to WebGL demo" in html
     assert "Raw benchmark JSON" in html
     assert "github-fab" in html
+    assert "github-shake" in html
     assert "viewBox=\"0 0 16 16\"" in html
 
 

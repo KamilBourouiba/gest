@@ -6,7 +6,7 @@
   <title>.gest WebGL 3D Avatar Viewer</title>
   <style>
     html, body { margin: 0; height: 100%; background: #080c14; color: #e8eef8; font: 14px system-ui, sans-serif; overflow: hidden; }
-    #hud { position: fixed; left: 16px; top: 14px; right: 92px; display: flex; gap: 16px; align-items: center; z-index: 2; }
+    #hud { position: fixed; left: 16px; top: 14px; right: 16px; display: flex; gap: 16px; align-items: center; z-index: 2; }
     #hud > div, .panel { background: rgba(10, 14, 22, 0.86); border: 1px solid #263149; padding: 10px 12px; border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,.24); }
     #deck { position: fixed; right: 16px; top: 96px; width: min(390px, calc(100vw - 32px)); display: grid; gap: 12px; z-index: 2; }
     .panel h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #9fffc0; }
@@ -22,8 +22,8 @@
     a.button { display: inline-block; background: #9fffc0; color: #071017; border-radius: 5px; padding: 8px 12px; font-weight: 800; text-decoration: none; }
     .github-fab {
       position: fixed;
-      right: 16px;
-      top: 14px;
+      left: 16px;
+      bottom: 16px;
       z-index: 4;
       display: inline-flex;
       align-items: center;
@@ -36,8 +36,16 @@
       font-weight: 900;
       text-decoration: none;
       border: 1px solid rgba(255,255,255,.12);
+      animation: github-shake 3.8s ease-in-out infinite;
     }
     .github-fab svg { width: 18px; height: 18px; fill: currentColor; }
+    @keyframes github-shake {
+      0%, 88%, 100% { transform: translateX(0) rotate(0deg); }
+      90% { transform: translateX(-2px) rotate(-1deg); }
+      92% { transform: translateX(2px) rotate(1deg); }
+      94% { transform: translateX(-1px) rotate(-.6deg); }
+      96% { transform: translateX(1px) rotate(.6deg); }
+    }
     a.link { color: #9fffc0; text-decoration: none; }
     .proof { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: center; }
     .proof strong { color: #9fffc0; font-size: 28px; }

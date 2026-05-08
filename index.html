@@ -19,8 +19,8 @@
     }
     .github-fab {
       position: fixed;
-      right: 18px;
-      top: 18px;
+      left: 18px;
+      bottom: 18px;
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -30,8 +30,16 @@
       padding: 10px 14px;
       font-weight: 900;
       text-decoration: none;
+      animation: github-shake 3.8s ease-in-out infinite;
     }
     .github-fab svg { width: 18px; height: 18px; fill: currentColor; }
+    @keyframes github-shake {
+      0%, 88%, 100% { transform: translateX(0) rotate(0deg); }
+      90% { transform: translateX(-2px) rotate(-1deg); }
+      92% { transform: translateX(2px) rotate(1deg); }
+      94% { transform: translateX(-1px) rotate(-.6deg); }
+      96% { transform: translateX(1px) rotate(.6deg); }
+    }
     h1 { font-size: clamp(36px, 8vw, 76px); line-height: .96; margin: 0 0 18px; }
     p { color: #a8b7d0; line-height: 1.65; max-width: 760px; }
     .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
