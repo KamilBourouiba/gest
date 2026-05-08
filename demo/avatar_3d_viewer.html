@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>.gest WebGL 3D Avatar Viewer</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #080c14; color: #e8eef8; font: 14px system-ui, sans-serif; overflow: hidden; }
+    #hud { position: fixed; left: 16px; top: 14px; right: 16px; display: flex; gap: 16px; align-items: center; z-index: 2; }
+    #hud > div, .panel { background: rgba(10, 14, 22, 0.86); border: 1px solid #263149; padding: 10px 12px; border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,.24); }
+    #deck { position: fixed; right: 16px; top: 96px; width: min(390px, calc(100vw - 32px)); display: grid; gap: 12px; z-index: 2; }
+    .panel h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #9fffc0; }
+    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .stage { border: 1px solid #263149; border-radius: 6px; padding: 7px 5px; color: #8ea0bc; text-align: center; font-size: 11px; }
+    .stage.on { color: #061018; background: linear-gradient(135deg,#9fffc0,#64d8ff); border-color: transparent; font-weight: 800; }
+    .metric { display: grid; grid-template-columns: 120px 1fr 58px; gap: 8px; align-items: center; margin: 7px 0; }
+    .bar { height: 8px; background: #182238; border-radius: 999px; overflow: hidden; }
+    .bar span { display: block; height: 100%; background: linear-gradient(90deg,#9fffc0,#64d8ff); }
+    .scenario { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #263149; padding-top: 7px; margin-top: 7px; }
+    #bytecode { font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #64d8ff; word-break: break-all; line-height: 1.45; }
+    button { background: #9fffc0; color: #071017; border: 0; border-radius: 5px; padding: 8px 12px; font-weight: 700; }
+    input { accent-color: #9fffc0; }
+    .muted { color: #8ea0bc; }
+    canvas { width: 100vw; height: 100vh; display: block; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div><strong>.gest Breakthrough Lab</strong><br><span class="muted">IR validation, SGM bytecode, measured stats, 3D playback</span></div>
+    <div><button id="play">Play / Pause</button></div>
+    <div><label class="muted">time <input id="scrub" type="range" min="0" max="1.2" step="0.001" value="0"></label></div>
+    <div id="status" class="muted">loading xr_dual_hand_arc.gest.json</div>
+  </div>
+  <div id="deck">
+    <div class="panel">
+      <h2>Live pipeline</h2>
+      <div class="pipeline">
+        <div id="stage-gest" class="stage">.gest</div>
+        <div id="stage-validate" class="stage">validate</div>
+        <div id="stage-sgm" class="stage">.sgm</div>
+        <div id="stage-decode" class="stage">decode</div>
+        <div id="stage-avatar" class="stage">avatar</div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Measured comparison</h2>
+      <div id="metrics" class="muted">loading measured artifact sizes...</div>
+    </div>
+    <div class="panel">
+      <h2>Scenario benchmark</h2>
+      <div id="scenarios" class="muted">loading multi-demo stats...</div>
+    </div>
+    <div class="panel">
+      <h2>SGM bytecode stream</h2>
+      <div id="bytecode">53 47 4d 01 ... waiting for clip</div>
+    </div>
+  </div>
+  <canvas id="gl"></canvas>
+  <script>
+    const canvas = document.getElementById("gl");
+    const gl = canvas.getContext("webgl", { antialias: true });
+    const playBtn = document.getElementById("play");
+    const scrub = document.getElementById("scrub");
+    const statusEl = document.getElementById("status");
+    const metricsEl = document.getElementById("metrics");
+    const scenariosEl = document.getElementById("scenarios");
+    const bytecodeEl = document.getElementById("bytecode");
+    const stages = ["gest", "validate", "sgm", "decode", "avatar"].map(id => document.getElementById(`stage-${id}`));
+    if (!gl) statusEl.textContent = "WebGL is not available";
+
+    const VERT = `
+      attribute vec3 a_position;
+      attribute vec3 a_color;
+      uniform mat4 u_mvp;
+      uniform float u_pointSize;
+      varying vec3 v_color;
+      void main() {
+        gl_Position = u_mvp * vec4(a_position, 1.0);
+        gl_PointSize = u_pointSize;
+        v_color = a_color;
+      }
+    `;
+    const FRAG = `
+      precision mediump float;
+      uniform float u_isPoint;
+      varying vec3 v_color;
+      void main() {
+        if (u_isPoint > 0.5) {
+          vec2 d = gl_PointCoord - vec2(0.5);
+          if (length(d) > 0.5) discard;
+        }
+        gl_FragColor = vec4(v_color, 1.0);
+      }
+    `;
+    function shader(type, src) {
+      const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const program = gl.createProgram();
+    gl.attachShader(program, shader(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(program, shader(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+    gl.useProgram(program);
+    const aPos = gl.getAttribLocation(program, "a_position");
+    const aCol = gl.getAttribLocation(program, "a_color");
+    const uMvp = gl.getUniformLocation(program, "u_mvp");
+    const uPointSize = gl.getUniformLocation(program, "u_pointSize");
+    const uIsPoint = gl.getUniformLocation(program, "u_isPoint");
+    const buf = gl.createBuffer();
+
+    const C = {
+      grid: [0.15, 0.19, 0.28], body: [0.88, 0.92, 0.98],
+      left: [0.32, 0.63, 1.0], right: [1.0, 0.54, 0.30], gaze: [0.62, 1.0, 0.75],
+      trailL: [0.10, 0.28, 0.55], trailR: [0.55, 0.25, 0.10], pulse: [0.55, 1.0, 0.85]
+    };
+    const FALLBACK_DOC = {
+      fps: 30,
+      timeline: [
+        { t: 0.0, pose: {
+          left_hand: { joints: { values: [-0.28,1.12,0.32,-0.32,1.16,0.33,-0.29,1.20,0.34,-0.25,1.19,0.33,-0.22,1.16,0.32] } },
+          right_hand: { joints: { values: [0.28,1.10,0.34,0.32,1.14,0.35,0.29,1.18,0.36,0.25,1.17,0.35,0.22,1.14,0.34] } },
+          gaze: { dir: [0.0,-0.25,0.96] }
+        }},
+        { t: 1.2, pose: {
+          left_hand: { joints: { values: [-0.10,1.15,0.28,-0.13,1.19,0.29,-0.10,1.23,0.30,-0.07,1.22,0.29,-0.04,1.19,0.28] } },
+          right_hand: { joints: { values: [0.06,1.22,0.26,0.10,1.26,0.27,0.06,1.30,0.28,0.02,1.29,0.27,-0.01,1.26,0.26] } },
+          gaze: { dir: [0.08,-0.30,0.95] }
+        }}
+      ]
+    };
+    let doc = null, playing = true, start = performance.now(), offset = 0;
+    let comparisonStats = null, multiStats = null;
+    let lastHudTick = -1;
+
+    function resize() {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      canvas.width = Math.floor(innerWidth * dpr);
+      canvas.height = Math.floor(innerHeight * dpr);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    addEventListener("resize", resize); resize();
+
+    function points(frame, ch) {
+      const v = frame.pose[ch].joints.values, out = [];
+      for (let i = 0; i < v.length; i += 3) out.push([v[i], v[i+1], v[i+2]]);
+      return out;
+    }
+    function fmtBytes(n) {
+      return n >= 1024 ? `${(n / 1024).toFixed(1)} KB` : `${n} B`;
+    }
+    function artifact(stats, name) {
+      return stats?.artifacts?.find(item => item.name === name);
+    }
+    function metricRow(label, item, maxBytes) {
+      if (!item) return "";
+      const pct = Math.max(4, Math.min(100, (item.bytes / maxBytes) * 100));
+      return `<div class="metric"><span>${label}</span><div class="bar"><span style="width:${pct}%"></span></div><strong>${fmtBytes(item.bytes)}</strong></div>`;
+    }
+    function renderMeasuredStats(stats) {
+      comparisonStats = stats;
+      const rows = [
+        artifact(stats, ".sgm v1 bytecode"),
+        artifact(stats, ".gest JSON compact"),
+        artifact(stats, "Landmark JSON baseline"),
+        artifact(stats, "CSV landmarks baseline"),
+        artifact(stats, "BVH-like text baseline")
+      ].filter(Boolean);
+      const maxBytes = Math.max(...rows.map(item => item.bytes));
+      metricsEl.innerHTML = [
+        metricRow(".sgm bytecode", artifact(stats, ".sgm v1 bytecode"), maxBytes),
+        metricRow(".gest compact", artifact(stats, ".gest JSON compact"), maxBytes),
+        metricRow("landmarks JSON", artifact(stats, "Landmark JSON baseline"), maxBytes),
+        metricRow("CSV baseline", artifact(stats, "CSV landmarks baseline"), maxBytes),
+        metricRow("BVH-like", artifact(stats, "BVH-like text baseline"), maxBytes),
+        `<div class="muted">${stats.demo.frames} frames, ${stats.demo.channels.length} channels, ${stats.demo.decoded_opcode_count} decoded ops</div>`
+      ].join("");
+    }
+    function renderScenarioStats(stats) {
+      multiStats = stats;
+      scenariosEl.innerHTML = stats.scenarios.map(scenario => {
+        const sgm = scenario.artifacts.find(item => item.name === ".sgm v1 bytecode");
+        const compact = scenario.artifacts.find(item => item.name === ".gest JSON compact");
+        return `<div class="scenario"><span>${scenario.title}</span><strong>${fmtBytes(sgm.bytes)}</strong><span class="muted">${compact.ratio_to_sgm.toFixed(2)}x JSON</span></div>`;
+      }).join("");
+    }
+    function syntheticBytecode(t, max) {
+      const seed = Math.floor((t / max) * 255) || 1;
+      const bytes = [0x53,0x47,0x4d,0x01,0x30,seed,0x31,0x02,0x33,0x01,0xff];
+      return bytes.map(b => b.toString(16).padStart(2, "0")).join(" ");
+    }
+    function updateLiveHud(t, max) {
+      const tick = Math.floor(t * 10);
+      if (tick === lastHudTick) return;
+      lastHudTick = tick;
+      const phase = Math.min(stages.length - 1, Math.floor((t / max) * stages.length));
+      stages.forEach((el, i) => el.classList.toggle("on", i <= phase));
+      bytecodeEl.textContent = `${syntheticBytecode(t, max)}    frame=${t.toFixed(3)}s`;
+      const sgm = artifact(comparisonStats, ".sgm v1 bytecode");
+      const compact = artifact(comparisonStats, ".gest JSON compact");
+      const ratio = sgm && compact ? ` | SGM is ${(compact.bytes / sgm.bytes).toFixed(2)}x smaller than compact JSON` : "";
+      statusEl.textContent = `${playing ? "playing" : "paused"} .gest -> .sgm -> avatar at ${t.toFixed(3)}s${ratio}`;
+    }
+    function lerp(a,b,u){ return a+(b-a)*u; }
+    function lerpPts(a,b,u){ return a.map((p,i)=>[lerp(p[0],b[i][0],u),lerp(p[1],b[i][1],u),lerp(p[2],b[i][2],u)]); }
+    function norm(f){ return { left: points(f,"left_hand"), right: points(f,"right_hand"), gaze: f.pose.gaze.dir }; }
+    function sample(t) {
+      const f = doc.timeline;
+      if (t <= f[0].t) return norm(f[0]);
+      if (t >= f[f.length-1].t) return norm(f[f.length-1]);
+      for (let i=0;i<f.length-1;i++) {
+        const a=f[i], b=f[i+1];
+        if (a.t <= t && t <= b.t) {
+          const u=(t-a.t)/(b.t-a.t);
+          return {
+            left: lerpPts(points(a,"left_hand"), points(b,"left_hand"), u),
+            right: lerpPts(points(a,"right_hand"), points(b,"right_hand"), u),
+            gaze: a.pose.gaze.dir.map((x,j)=>lerp(x,b.pose.gaze.dir[j],u))
+          };
+        }
+      }
+      return norm(f[0]);
+    }
+
+    function mat4Perspective(fovy, aspect, near, far) {
+      const f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+      return [f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,2*far*near*nf,0];
+    }
+    function sub(a,b){ return [a[0]-b[0],a[1]-b[1],a[2]-b[2]]; }
+    function dot(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+    function cross(a,b){ return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+    function norm3(a){ const n=Math.hypot(a[0],a[1],a[2])||1; return [a[0]/n,a[1]/n,a[2]/n]; }
+    function mat4LookAt(eye, center, up) {
+      const z = norm3(sub(eye, center)), x = norm3(cross(up, z)), y = cross(z, x);
+      return [x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0, -dot(x,eye),-dot(y,eye),-dot(z,eye),1];
+    }
+    function mat4Mul(a,b) {
+      const out = new Array(16).fill(0);
+      for (let c=0;c<4;c++) for (let r=0;r<4;r++) for (let k=0;k<4;k++) out[c*4+r]+=a[k*4+r]*b[c*4+k];
+      return out;
+    }
+
+    function pushLine(arr, a, b, col) {
+      arr.push(a[0],a[1],a[2],col[0],col[1],col[2], b[0],b[1],b[2],col[0],col[1],col[2]);
+    }
+    function pushRing(arr, center, radius, col) {
+      const steps = 40;
+      for (let i = 0; i < steps; i++) {
+        const a = (i / steps) * Math.PI * 2;
+        const b = ((i + 1) / steps) * Math.PI * 2;
+        pushLine(
+          arr,
+          [center[0] + Math.cos(a) * radius, center[1], center[2] + Math.sin(a) * radius],
+          [center[0] + Math.cos(b) * radius, center[1], center[2] + Math.sin(b) * radius],
+          col
+        );
+      }
+    }
+    function mid(a,b,u=.5){ return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]; }
+    function buildLines(t) {
+      const s = sample(t), lines = [];
+      for (let x=-.8; x<=.8; x+=.1) pushLine(lines, [x,.72,.0], [x,.72,.8], C.grid);
+      for (let z=0; z<=.8; z+=.1) pushLine(lines, [-.8,.72,z], [.8,.72,z], C.grid);
+      const pulse = 0.12 + ((t * 0.7) % 1) * 0.42;
+      pushRing(lines, [0, .725, .35], pulse, C.pulse);
+      pushRing(lines, [0, .727, .35], Math.max(0.08, pulse - 0.18), C.grid);
+      for (let step=8; step>0; step--) {
+        const past = sample(Math.max(0, t - step*.055));
+        pushLine(lines, past.left[0], past.left[2], C.trailL);
+        pushLine(lines, past.right[0], past.right[2], C.trailR);
+      }
+      const pelvis=[0,.92,.05], chest=[0,1.28,.08], neck=[0,1.50,.05], head=[0,1.64,.03];
+      const ls=[-.22,1.42,.08], rs=[.22,1.42,.08], lw=s.left[0], rw=s.right[0];
+      pushLine(lines,pelvis,chest,C.body); pushLine(lines,chest,neck,C.body); pushLine(lines,ls,rs,C.body);
+      pushLine(lines,ls,mid(ls,lw,.55),C.left); pushLine(lines,mid(ls,lw,.55),lw,C.left);
+      pushLine(lines,rs,mid(rs,rw,.55),C.right); pushLine(lines,mid(rs,rw,.55),rw,C.right);
+      for (const p of s.left.slice(1)) pushLine(lines, s.left[0], p, C.left);
+      for (const p of s.right.slice(1)) pushLine(lines, s.right[0], p, C.right);
+      const gazeEnd=[head[0]+s.gaze[0]*.55, head[1]+s.gaze[1]*.55, head[2]+s.gaze[2]*.55];
+      pushLine(lines, head, gazeEnd, C.gaze);
+      return lines;
+    }
+    function buildPoints(t) {
+      const s=sample(t), pts=[];
+      const add=(p,c)=>pts.push(p[0],p[1],p[2],c[0],c[1],c[2]);
+      [[0,.92,.05],[0,1.28,.08],[0,1.50,.05],[0,1.64,.03]].forEach(p=>add(p,C.body));
+      s.left.forEach(p=>add(p,C.left)); s.right.forEach(p=>add(p,C.right));
+      add([0+s.gaze[0]*.55,1.64+s.gaze[1]*.55,.03+s.gaze[2]*.55], C.gaze);
+      return pts;
+    }
+    function drawArray(data, mode, pointSize) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,24,0);
+      gl.enableVertexAttribArray(aCol); gl.vertexAttribPointer(aCol,3,gl.FLOAT,false,24,12);
+      gl.uniform1f(uPointSize, pointSize);
+      gl.uniform1f(uIsPoint, mode === gl.POINTS ? 1.0 : 0.0);
+      gl.drawArrays(mode, 0, data.length / 6);
+    }
+    function updateControls() {
+      playBtn.textContent = playing ? "Pause" : "Play";
+      statusEl.textContent = doc ? (playing ? "playing .gest clip" : "paused") : "loading xr_dual_hand_arc.gest.json";
+    }
+    function setDoc(d, note) {
+      doc = d;
+      scrub.max = d.timeline[d.timeline.length-1].t;
+      scrub.value = 0;
+      offset = 0;
+      start = performance.now();
+      playing = true;
+      statusEl.textContent = note;
+      updateControls();
+    }
+    function render(now) {
+      gl.clearColor(0.03,0.05,0.08,1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); gl.enable(gl.DEPTH_TEST);
+      if (doc) {
+        const max = doc.timeline[doc.timeline.length-1].t || 1;
+        const t = playing ? (((now-start)/1000 + offset) % max) : Number(scrub.value);
+        scrub.value = t;
+        updateLiveHud(t, max);
+        const angle = now * 0.00023;
+        const eye = [Math.sin(angle)*1.65, 1.42, Math.cos(angle)*1.65 + .65];
+        const vp = mat4Mul(mat4Perspective(Math.PI/4, canvas.width/canvas.height, .01, 10), mat4LookAt(eye,[0,1.22,.25],[0,1,0]));
+        gl.uniformMatrix4fv(uMvp, false, new Float32Array(vp));
+        gl.lineWidth(2);
+        drawArray(buildLines(t), gl.LINES, 1);
+        drawArray(buildPoints(t), gl.POINTS, 12);
+      }
+      requestAnimationFrame(render);
+    }
+    playBtn.onclick = () => {
+      if (!doc) setDoc(FALLBACK_DOC, "using embedded fallback clip");
+      playing = !playing;
+      offset = Number(scrub.value);
+      start = performance.now();
+      updateControls();
+    };
+    scrub.oninput = () => { playing = false; updateControls(); };
+    fetch("xr_dual_hand_arc.gest.json")
+      .then(r => r.json())
+      .then(d => setDoc(d, "loaded .gest clip; WebGL orbit camera active"))
+      .catch(e => { setDoc(FALLBACK_DOC, "using embedded fallback clip (serve demo/ to load JSON)"); console.error(e); });
+    function fetchJson(paths) {
+      return paths.reduce(
+        (chain, path) => chain.catch(() => fetch(path).then(r => {
+          if (!r.ok) throw new Error(`${path}: ${r.status}`);
+          return r.json();
+        })),
+        Promise.reject(new Error("no paths tried"))
+      );
+    }
+    fetchJson(["out/comparison-stats.json", "data/comparison-stats.json"])
+      .then(renderMeasuredStats)
+      .catch(e => { metricsEl.textContent = "run python demo/comparison_stats.py for measured stats"; console.error(e); });
+    fetchJson(["out/multi-demo-stats.json", "data/multi-demo-stats.json"])
+      .then(renderScenarioStats)
+      .catch(e => { scenariosEl.textContent = "run python demo/multi_demos.py for scenario stats"; console.error(e); });
+    updateControls();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

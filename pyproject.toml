@@ -20,6 +20,7 @@ gest-validate = "gest.cli:main"
 gest-compile = "gest.compile_cli:main"
 gest-dump-sgm = "gest.dump_sgm_cli:main"
 gest-sgm-to-gest = "gest.sgm_to_gest_cli:main"
+gest-import = "gest.import_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gest"]

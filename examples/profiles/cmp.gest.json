@@ -1,0 +1,59 @@
+{
+  "version": "0.2",
+  "profile": "cmp",
+  "fps": 60,
+  "time_base": "seconds",
+  "units": "meters",
+  "coordinate_system": {
+    "handedness": "right",
+    "up": "+Y",
+    "forward": "+Z"
+  },
+  "capabilities": ["blob_external", "delta_frames", "pose_dictionary"],
+  "space": {
+    "anchors": {
+      "world": { "t": [0, 0, 0], "q": [0, 0, 0, 1] },
+      "chest": { "parent": "world", "t": [0, 1.1, 0], "q": [0, 0, 0, 1] }
+    }
+  },
+  "channels": {
+    "right_hand": {
+      "type": "articulated",
+      "parent": "chest",
+      "joint_count": 4,
+      "joint_value_stride": 3,
+      "joint_layout": "demo_four_point_hand_vq_v1",
+      "state_enum": ["shape_0", "shape_1", "shape_2"]
+    }
+  },
+  "blobs": {
+    "pose_dict_0": {
+      "format": "base64",
+      "data": "AAECAwQFBgcICQoLDA0ODw=="
+    },
+    "delta_0": {
+      "format": "raw_uint8",
+      "data": "AQIDBAUG"
+    }
+  },
+  "timeline": [
+    {
+      "t": 0.0,
+      "pose": {
+        "right_hand": {
+          "joints": { "format": "packed_float16", "blob_ref": "pose_dict_0" },
+          "state_index": 0
+        }
+      }
+    },
+    {
+      "t": 0.25,
+      "pose": {
+        "right_hand": {
+          "joints": { "format": "packed_float16", "blob_ref": "delta_0" },
+          "state_index": 2
+        }
+      }
+    }
+  ]
+}

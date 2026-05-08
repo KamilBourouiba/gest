@@ -1,0 +1,86 @@
+{
+  "demo": {
+    "frames": 9,
+    "duration_seconds": 1.2,
+    "fps": 60,
+    "channels": [
+      "gaze",
+      "left_hand",
+      "right_hand"
+    ],
+    "floats_per_frame": 33,
+    "sample_floats_total": 297,
+    "decoded_opcode_count": 54
+  },
+  "artifacts": [
+    {
+      "name": ".gest JSON pretty",
+      "kind": "gest",
+      "bytes": 12477,
+      "ratio_to_sgm": 7.988,
+      "notes": "Readable canonical IR with schema-facing metadata"
+    },
+    {
+      "name": ".gest JSON compact",
+      "kind": "gest",
+      "bytes": 4679,
+      "ratio_to_sgm": 2.996,
+      "notes": "Same IR without whitespace"
+    },
+    {
+      "name": ".gest JSON gzip",
+      "kind": "gest",
+      "bytes": 1366,
+      "ratio_to_sgm": 0.875,
+      "notes": "Compressed compact JSON"
+    },
+    {
+      "name": ".sgm v1 bytecode",
+      "kind": "sgm",
+      "bytes": 1562,
+      "ratio_to_sgm": 1.0,
+      "notes": "Runtime bytecode emitted by the reference compiler"
+    },
+    {
+      "name": "Recovered .gest JSON",
+      "kind": "gest",
+      "bytes": 15348,
+      "ratio_to_sgm": 9.826,
+      "notes": "Lossy draft recovered from .sgm"
+    },
+    {
+      "name": "Decoded SGM dump",
+      "kind": "debug",
+      "bytes": 14657,
+      "ratio_to_sgm": 9.383,
+      "notes": "Debug channel table + reconstructed timeline"
+    },
+    {
+      "name": "Landmark JSON baseline",
+      "kind": "baseline",
+      "bytes": 2536,
+      "ratio_to_sgm": 1.624,
+      "notes": "ML-style landmarks only; no IR validation contract"
+    },
+    {
+      "name": "CSV landmarks baseline",
+      "kind": "baseline",
+      "bytes": 3712,
+      "ratio_to_sgm": 2.376,
+      "notes": "Flat rows; easy to inspect, weak structure"
+    },
+    {
+      "name": "BVH-like text baseline",
+      "kind": "baseline",
+      "bytes": 3309,
+      "ratio_to_sgm": 2.118,
+      "notes": "Sampled skeleton-style text baseline for this clip"
+    }
+  ],
+  "methodology": [
+    "All byte counts are measured locally from the same generated demo document.",
+    "Baselines are concrete transformations of the same numeric samples, not official exporters.",
+    "BVH-like baseline is a sampled-channel text baseline shaped like BVH, not a DCC-certified BVH exporter.",
+    "Ratios are relative to .sgm v1 bytecode for this demo clip."
+  ]
+}

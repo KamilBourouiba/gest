@@ -1,0 +1,64 @@
+{
+  "version": "0.2",
+  "profile": "neural",
+  "fps": 30,
+  "time_base": "seconds",
+  "units": "meters",
+  "coordinate_system": {
+    "handedness": "right",
+    "up": "+Y",
+    "forward": "+Z"
+  },
+  "capabilities": ["latent_channels", "decoder_hint", "numeric_control"],
+  "space": {
+    "anchors": {
+      "world": { "t": [0, 0, 0], "q": [0, 0, 0, 1] },
+      "latent_origin": { "parent": "world", "t": [0, 1.0, 0], "q": [0, 0, 0, 1] }
+    }
+  },
+  "channels": {
+    "motion_latent": {
+      "type": "latent",
+      "parent": "latent_origin",
+      "dtype": "float16",
+      "shape": [1, 16],
+      "decoder_hint": "demo_latent_decoder_v1"
+    },
+    "amplitude": {
+      "type": "scalar",
+      "parent": "latent_origin"
+    }
+  },
+  "blobs": {
+    "latent_0": {
+      "format": "base64",
+      "data": "AAAAADwAPAA8ADwAPAA8ADwAPAA="
+    },
+    "latent_1": {
+      "format": "base64",
+      "data": "ADwAPAA8ADwAPAA8ADwAPAAAAAA="
+    }
+  },
+  "timeline": [
+    {
+      "t": 0.0,
+      "pose": {
+        "motion_latent": {
+          "tensor": { "format": "base64", "blob_ref": "latent_0" },
+          "ctrl": [0.0, 0.5, 1.0]
+        },
+        "amplitude": { "value": 0.25 }
+      }
+    },
+    {
+      "t": 0.5,
+      "pose": {
+        "motion_latent": {
+          "tensor": { "format": "base64", "blob_ref": "latent_1" },
+          "ctrl": [0.2, 0.7, 1.0]
+        },
+        "amplitude": { "value": 0.65 }
+      }
+    }
+  ]
+}

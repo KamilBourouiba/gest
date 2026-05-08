@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>.gest Avatar Viewer</title>
+  <style>
+    body { margin: 0; background: #0b0f18; color: #e8eef8; font: 14px system-ui, sans-serif; }
+    header { padding: 14px 18px; border-bottom: 1px solid #273045; display: flex; gap: 16px; align-items: center; }
+    button { background: #9fffc0; color: #081018; border: 0; border-radius: 4px; padding: 8px 12px; font-weight: 700; }
+    input { accent-color: #9fffc0; }
+    canvas { display: block; width: 100vw; height: calc(100vh - 58px); }
+    .muted { color: #8ea0bc; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>.gest Avatar Viewer</strong>
+    <button id="play">Play / Pause</button>
+    <label class="muted">time <input id="scrub" type="range" min="0" max="1.2" step="0.001" value="0"></label>
+    <span id="status" class="muted">loading demo/xr_dual_hand_arc.gest.json</span>
+  </header>
+  <canvas id="view" width="1280" height="720"></canvas>
+  <script>
+    const canvas = document.getElementById("view");
+    const ctx = canvas.getContext("2d");
+    const scrub = document.getElementById("scrub");
+    const statusEl = document.getElementById("status");
+    const play = document.getElementById("play");
+    const FALLBACK_DOC = {
+      fps: 30,
+      timeline: [
+        { t: 0.0, pose: {
+          left_hand: { joints: { values: [-0.28,1.12,0.32,-0.32,1.16,0.33,-0.29,1.20,0.34,-0.25,1.19,0.33,-0.22,1.16,0.32] } },
+          right_hand: { joints: { values: [0.28,1.10,0.34,0.32,1.14,0.35,0.29,1.18,0.36,0.25,1.17,0.35,0.22,1.14,0.34] } },
+          gaze: { dir: [0.0,-0.25,0.96] }
+        }},
+        { t: 1.2, pose: {
+          left_hand: { joints: { values: [-0.10,1.15,0.28,-0.13,1.19,0.29,-0.10,1.23,0.30,-0.07,1.22,0.29,-0.04,1.19,0.28] } },
+          right_hand: { joints: { values: [0.06,1.22,0.26,0.10,1.26,0.27,0.06,1.30,0.28,0.02,1.29,0.27,-0.01,1.26,0.26] } },
+          gaze: { dir: [0.08,-0.30,0.95] }
+        }}
+      ]
+    };
+    let doc = null, playing = true, t0 = performance.now(), offset = 0;
+
+    const colors = {
+      bg: "#0b0f18", grid: "#202a3e", body: "#e8eef8",
+      left: "#52a0ff", right: "#ff8a4c", gaze: "#9fffc0", muted: "#8ea0bc"
+    };
+
+    function points(frame, ch) {
+      const v = frame.pose[ch].joints.values;
+      const pts = [];
+      for (let i = 0; i < v.length; i += 3) pts.push([v[i], v[i+1], v[i+2]]);
+      return pts;
+    }
+    function lerp(a, b, u) { return a + (b - a) * u; }
+    function lerpPts(a, b, u) {
+      return a.map((p, i) => [lerp(p[0], b[i][0], u), lerp(p[1], b[i][1], u), lerp(p[2], b[i][2], u)]);
+    }
+    function sample(t) {
+      const frames = doc.timeline;
+      if (t <= frames[0].t) return norm(frames[0]);
+      if (t >= frames[frames.length - 1].t) return norm(frames[frames.length - 1]);
+      for (let i = 0; i < frames.length - 1; i++) {
+        const a = frames[i], b = frames[i + 1];
+        if (a.t <= t && t <= b.t) {
+          const u = (t - a.t) / (b.t - a.t);
+          return {
+            left: lerpPts(points(a, "left_hand"), points(b, "left_hand"), u),
+            right: lerpPts(points(a, "right_hand"), points(b, "right_hand"), u),
+            gaze: a.pose.gaze.dir.map((x, j) => lerp(x, b.pose.gaze.dir[j], u))
+          };
+        }
+      }
+      return norm(frames[0]);
+    }
+    function norm(f) { return { left: points(f, "left_hand"), right: points(f, "right_hand"), gaze: f.pose.gaze.dir }; }
+    function proj(p) {
+      const [x,y,z] = p;
+      return [canvas.width/2 + x*650, canvas.height - 70 - (y - 0.72)*600 - z*50];
+    }
+    function line(a, b, color, w=4) {
+      const pa = proj(a), pb = proj(b);
+      ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
+    }
+    function dot(p, r, color) {
+      const pp = proj(p);
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(pp[0], pp[1], r, 0, Math.PI*2); ctx.fill();
+    }
+    function hand(pts, color) {
+      dot(pts[0], 12, color);
+      for (const p of pts.slice(1)) { line(pts[0], p, color, 4); dot(p, 7, color); }
+    }
+    function mid(a, b, u=.5) { return [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)]; }
+    function draw(t) {
+      ctx.fillStyle = colors.bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
+      for (let x=140; x<canvas.width-140; x+=80) { ctx.beginPath(); ctx.moveTo(x,80); ctx.lineTo(x,canvas.height-90); ctx.stroke(); }
+      for (let y=110; y<canvas.height-90; y+=60) { ctx.beginPath(); ctx.moveTo(140,y); ctx.lineTo(canvas.width-140,y); ctx.stroke(); }
+      const s = sample(t);
+      const pelvis=[0,0.92,0.05], chest=[0,1.28,0.08], neck=[0,1.50,0.05], head=[0,1.64,0.03];
+      const ls=[-0.22,1.42,0.08], rs=[0.22,1.42,0.08], lw=s.left[0], rw=s.right[0];
+      line(pelvis, chest, colors.body, 8); line(chest, neck, colors.body, 8); line(ls, rs, colors.body, 7);
+      line(ls, mid(ls,lw,.55), colors.left, 7); line(mid(ls,lw,.55), lw, colors.left, 7);
+      line(rs, mid(rs,rw,.55), colors.right, 7); line(mid(rs,rw,.55), rw, colors.right, 7);
+      dot(head, 30, colors.body); hand(s.left, colors.left); hand(s.right, colors.right);
+      const gazeEnd=[head[0]+s.gaze[0]*.45, head[1]+s.gaze[1]*.45, head[2]+s.gaze[2]*.45];
+      line(head, gazeEnd, colors.gaze, 3); dot(gazeEnd, 7, colors.gaze);
+      ctx.fillStyle = colors.body; ctx.font = "24px system-ui"; ctx.fillText(".gest driving an avatar rig", 36, 44);
+      ctx.fillStyle = colors.muted; ctx.font = "15px system-ui"; ctx.fillText(`t=${t.toFixed(2)}s  channels: left_hand right_hand gaze`, 36, 70);
+    }
+    function tick(now) {
+      if (doc && playing) {
+        const max = doc.timeline[doc.timeline.length-1].t;
+        const t = ((now - t0) / 1000 + offset) % max;
+        scrub.value = t; draw(t);
+      }
+      requestAnimationFrame(tick);
+    }
+    function updateControls() {
+      play.textContent = playing ? "Pause" : "Play";
+      statusEl.textContent = doc ? (playing ? "playing .gest clip" : "paused") : "loading demo/xr_dual_hand_arc.gest.json";
+    }
+    function setDoc(d, note) {
+      doc = d;
+      scrub.max = d.timeline[d.timeline.length-1].t;
+      scrub.value = 0;
+      offset = 0;
+      t0 = performance.now();
+      playing = true;
+      statusEl.textContent = note;
+      draw(0);
+      updateControls();
+    }
+    play.onclick = () => {
+      if (!doc) setDoc(FALLBACK_DOC, "using embedded fallback clip");
+      playing = !playing;
+      offset = Number(scrub.value);
+      t0 = performance.now();
+      updateControls();
+      draw(Number(scrub.value));
+    };
+    scrub.oninput = () => { playing = false; updateControls(); draw(Number(scrub.value)); };
+    fetch("xr_dual_hand_arc.gest.json")
+      .then(r => r.json())
+      .then(d => setDoc(d, "loaded .gest clip"))
+      .catch(e => { setDoc(FALLBACK_DOC, "using embedded fallback clip (serve demo/ to load JSON)"); console.error(e); });
+    updateControls();
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{
+  "version": "0.2",
+  "profile": "rt",
+  "fps": 120,
+  "time_base": "ticks",
+  "units": "meters",
+  "coordinate_system": {
+    "handedness": "right",
+    "up": "+Y",
+    "forward": "+Z"
+  },
+  "capabilities": ["streaming_segments", "inline_pose"],
+  "space": {
+    "anchors": {
+      "world": { "t": [0, 0, 0], "q": [0, 0, 0, 1] },
+      "chest": { "parent": "world", "t": [0, 1.1, 0], "q": [0, 0, 0, 1] }
+    }
+  },
+  "channels": {
+    "right_hand": {
+      "type": "articulated",
+      "parent": "chest",
+      "joint_count": 1,
+      "joint_value_stride": 3,
+      "joint_layout": "demo_wrist_rt_v1",
+      "state_enum": ["shape_0", "shape_1"]
+    },
+    "gaze": {
+      "type": "direction",
+      "parent": "chest",
+      "representation": "unit_vector"
+    }
+  },
+  "timeline": [
+    {
+      "t": 0,
+      "pose": {
+        "right_hand": {
+          "joints": { "format": "raw_float32", "values": [0.0, 0.5, 0.2] },
+          "state_index": 0
+        },
+        "gaze": { "dir": [0, 0, 1] }
+      }
+    },
+    {
+      "t": 4,
+      "pose": {
+        "right_hand": {
+          "joints": { "format": "raw_float32", "values": [0.05, 0.52, 0.22] },
+          "state_index": 1
+        },
+        "gaze": { "dir": [0.05, 0, 0.998] }
+      }
+    }
+  ],
+  "stream": {
+    "segment_duration": 4,
+    "segments": [
+      {
+        "seq": 0,
+        "channels_digest": "sha256:demo-rt-segment-0",
+        "byte_range": [0, 128]
+      }
+    ]
+  }
+}

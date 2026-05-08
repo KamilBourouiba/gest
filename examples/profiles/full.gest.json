@@ -1,0 +1,77 @@
+{
+  "version": "0.2",
+  "profile": "full",
+  "fps": 60,
+  "time_base": "seconds",
+  "units": "meters",
+  "coordinate_system": {
+    "handedness": "right",
+    "up": "+Y",
+    "forward": "+Z"
+  },
+  "capabilities": ["hierarchy", "hermite_tangents", "blob_external"],
+  "interpolation_defaults": {
+    "translation": "cubic_hermite",
+    "rotation": "slerp",
+    "scalar": "linear"
+  },
+  "space": {
+    "anchors": {
+      "world": { "t": [0, 0, 0], "q": [0, 0, 0, 1] },
+      "chest": { "parent": "world", "t": [0, 1.15, 0], "q": [0, 0, 0, 1] }
+    },
+    "named_points": {
+      "work_a": { "parent": "chest", "local": [-0.2, 0.15, 0.3] },
+      "work_b": { "parent": "chest", "local": [0.2, 0.15, 0.3] }
+    }
+  },
+  "channels": {
+    "right_hand": {
+      "type": "articulated",
+      "parent": "chest",
+      "joint_count": 2,
+      "joint_value_stride": 7,
+      "joint_layout": "demo_two_joint_pose7_v1",
+      "state_enum": ["shape_0", "shape_1"]
+    },
+    "gaze": {
+      "type": "direction",
+      "parent": "chest",
+      "representation": "unit_vector"
+    }
+  },
+  "timeline": [
+    {
+      "t": 0.0,
+      "pose": {
+        "right_hand": {
+          "joints": {
+            "format": "raw_float32",
+            "values": [0.0, 0.5, 0.0, 0, 0, 0, 1, 0.08, 0.58, 0.02, 0, 0, 0, 1]
+          },
+          "state_index": 0
+        },
+        "gaze": { "dir": [0, 0, 1] }
+      },
+      "out_tangent": {
+        "right_hand.joints": { "format": "raw_float32", "values": [0.1, 0.0, 0.0] }
+      }
+    },
+    {
+      "t": 0.4,
+      "pose": {
+        "right_hand": {
+          "joints": {
+            "format": "raw_float32",
+            "values": [0.18, 0.52, 0.08, 0, 0, 0, 1, 0.26, 0.60, 0.10, 0, 0, 0, 1]
+          },
+          "state_index": 1
+        },
+        "gaze": { "dir": [0.1, -0.1, 0.99] }
+      },
+      "in_tangent": {
+        "right_hand.joints": { "format": "raw_float32", "values": [0.1, 0.0, 0.0] }
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "fps": 90,
+  "frames": [
+    {
+      "t": 0.0,
+      "hands": {
+        "right": [
+          { "name": "WRIST", "position": [0.18, 1.05, 0.42] },
+          { "name": "PALM", "position": [0.20, 1.09, 0.41] },
+          { "name": "INDEX_TIP", "position": [0.22, 1.17, 0.39] }
+        ]
+      }
+    },
+    {
+      "t": 0.011,
+      "hands": {
+        "right": [
+          { "name": "WRIST", "position": [0.16, 1.06, 0.40] },
+          { "name": "PALM", "position": [0.18, 1.10, 0.39] },
+          { "name": "INDEX_TIP", "position": [0.20, 1.18, 0.37] }
+        ]
+      }
+    }
+  ]
+}

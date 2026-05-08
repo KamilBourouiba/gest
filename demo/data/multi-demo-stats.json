@@ -1,0 +1,269 @@
+{
+  "methodology": [
+    "Each scenario is generated as a valid .gest document.",
+    "All byte counts are measured from local artifacts produced from the same numeric samples.",
+    "CSV, landmark JSON, and BVH-like baselines are concrete transforms, not official exporters.",
+    "Ratios are relative to .sgm v1 bytecode for that same scenario."
+  ],
+  "scenarios": [
+    {
+      "slug": "xr_dual_hand_arc",
+      "title": "XR dual-hand arc",
+      "real_life_case": "A headset or depth-camera clip records coordinated hand motion and gaze for QA replay.",
+      "frames": 9,
+      "duration_seconds": 1.2,
+      "fps": 60,
+      "channels": [
+        "gaze",
+        "left_hand",
+        "right_hand"
+      ],
+      "sample_floats_total": 297,
+      "decoded_opcode_count": 54,
+      "artifacts": [
+        {
+          "name": ".sgm v1 bytecode",
+          "kind": "binary",
+          "bytes": 1562,
+          "ratio_to_sgm": 1.0
+        },
+        {
+          "name": ".gest JSON compact",
+          "kind": "json",
+          "bytes": 4679,
+          "ratio_to_sgm": 2.996
+        },
+        {
+          "name": ".gest JSON pretty",
+          "kind": "json",
+          "bytes": 12477,
+          "ratio_to_sgm": 7.988
+        },
+        {
+          "name": ".gest JSON gzip",
+          "kind": "gzip",
+          "bytes": 1366,
+          "ratio_to_sgm": 0.875
+        },
+        {
+          "name": ".gest YAML",
+          "kind": "yaml",
+          "bytes": 8245,
+          "ratio_to_sgm": 5.278
+        },
+        {
+          "name": "Landmark JSON baseline",
+          "kind": "json",
+          "bytes": 2536,
+          "ratio_to_sgm": 1.624
+        },
+        {
+          "name": "CSV rows baseline",
+          "kind": "csv",
+          "bytes": 4124,
+          "ratio_to_sgm": 2.64
+        },
+        {
+          "name": "BVH-like text baseline",
+          "kind": "bvh-like",
+          "bytes": 3319,
+          "ratio_to_sgm": 2.125
+        }
+      ]
+    },
+    {
+      "slug": "robot_teleop_reach",
+      "title": "Robot teleoperation reach",
+      "real_life_case": "A remote operator guides a gripper-like end effector toward a target while gaze stays locked on the workspace.",
+      "frames": 14,
+      "duration_seconds": 1.6,
+      "fps": 90,
+      "channels": [
+        "gaze",
+        "right_hand"
+      ],
+      "sample_floats_total": 210,
+      "decoded_opcode_count": 56,
+      "artifacts": [
+        {
+          "name": ".sgm v1 bytecode",
+          "kind": "binary",
+          "bytes": 1211,
+          "ratio_to_sgm": 1.0
+        },
+        {
+          "name": ".gest JSON compact",
+          "kind": "json",
+          "bytes": 3547,
+          "ratio_to_sgm": 2.929
+        },
+        {
+          "name": ".gest JSON pretty",
+          "kind": "json",
+          "bytes": 9627,
+          "ratio_to_sgm": 7.95
+        },
+        {
+          "name": ".gest JSON gzip",
+          "kind": "gzip",
+          "bytes": 942,
+          "ratio_to_sgm": 0.778
+        },
+        {
+          "name": ".gest YAML",
+          "kind": "yaml",
+          "bytes": 6044,
+          "ratio_to_sgm": 4.991
+        },
+        {
+          "name": "Landmark JSON baseline",
+          "kind": "json",
+          "bytes": 2123,
+          "ratio_to_sgm": 1.753
+        },
+        {
+          "name": "CSV rows baseline",
+          "kind": "csv",
+          "bytes": 3025,
+          "ratio_to_sgm": 2.498
+        },
+        {
+          "name": "BVH-like text baseline",
+          "kind": "bvh-like",
+          "bytes": 2026,
+          "ratio_to_sgm": 1.673
+        }
+      ]
+    },
+    {
+      "slug": "rehab_symmetry_loop",
+      "title": "Rehabilitation symmetry loop",
+      "real_life_case": "A practice session records bilateral hand movement quality without storing any natural-language instruction or patient notes.",
+      "frames": 20,
+      "duration_seconds": 2.2,
+      "fps": 60,
+      "channels": [
+        "gaze",
+        "left_hand",
+        "right_hand"
+      ],
+      "sample_floats_total": 780,
+      "decoded_opcode_count": 120,
+      "artifacts": [
+        {
+          "name": ".sgm v1 bytecode",
+          "kind": "binary",
+          "bytes": 3890,
+          "ratio_to_sgm": 1.0
+        },
+        {
+          "name": ".gest JSON compact",
+          "kind": "json",
+          "bytes": 9330,
+          "ratio_to_sgm": 2.398
+        },
+        {
+          "name": ".gest JSON pretty",
+          "kind": "json",
+          "bytes": 26919,
+          "ratio_to_sgm": 6.92
+        },
+        {
+          "name": ".gest JSON gzip",
+          "kind": "gzip",
+          "bytes": 1819,
+          "ratio_to_sgm": 0.468
+        },
+        {
+          "name": ".gest YAML",
+          "kind": "yaml",
+          "bytes": 18010,
+          "ratio_to_sgm": 4.63
+        },
+        {
+          "name": "Landmark JSON baseline",
+          "kind": "json",
+          "bytes": 6517,
+          "ratio_to_sgm": 1.675
+        },
+        {
+          "name": "CSV rows baseline",
+          "kind": "csv",
+          "bytes": 11205,
+          "ratio_to_sgm": 2.88
+        },
+        {
+          "name": "BVH-like text baseline",
+          "kind": "bvh-like",
+          "bytes": 6534,
+          "ratio_to_sgm": 1.68
+        }
+      ]
+    },
+    {
+      "slug": "dataset_pose7_microclip",
+      "title": "Dataset pose7 microclip",
+      "real_life_case": "A compact benchmark clip preserves joint translations and quaternions while keeping gloss/meaning labels in a separate approved manifest.",
+      "frames": 8,
+      "duration_seconds": 0.7,
+      "fps": 30,
+      "channels": [
+        "gaze",
+        "left_hand",
+        "right_hand"
+      ],
+      "sample_floats_total": 360,
+      "decoded_opcode_count": 48,
+      "artifacts": [
+        {
+          "name": ".sgm v1 bytecode",
+          "kind": "binary",
+          "bytes": 1778,
+          "ratio_to_sgm": 1.0
+        },
+        {
+          "name": ".gest JSON compact",
+          "kind": "json",
+          "bytes": 4131,
+          "ratio_to_sgm": 2.323
+        },
+        {
+          "name": ".gest JSON pretty",
+          "kind": "json",
+          "bytes": 12330,
+          "ratio_to_sgm": 6.935
+        },
+        {
+          "name": ".gest JSON gzip",
+          "kind": "gzip",
+          "bytes": 879,
+          "ratio_to_sgm": 0.494
+        },
+        {
+          "name": ".gest YAML",
+          "kind": "yaml",
+          "bytes": 8211,
+          "ratio_to_sgm": 4.618
+        },
+        {
+          "name": "Landmark JSON baseline",
+          "kind": "json",
+          "bytes": 2401,
+          "ratio_to_sgm": 1.35
+        },
+        {
+          "name": "CSV rows baseline",
+          "kind": "csv",
+          "bytes": 2901,
+          "ratio_to_sgm": 1.632
+        },
+        {
+          "name": "BVH-like text baseline",
+          "kind": "bvh-like",
+          "bytes": 2030,
+          "ratio_to_sgm": 1.142
+        }
+      ]
+    }
+  ]
+}

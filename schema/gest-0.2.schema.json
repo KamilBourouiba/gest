@@ -12,7 +12,7 @@
     },
     "profile": {
       "type": "string",
-      "enum": ["full", "rt", "cmp", "neural_bundle"],
+      "enum": ["full", "rt", "cmp", "neural", "neural_bundle"],
       "default": "full"
     },
     "fps": { "type": "number", "exclusiveMinimum": 0 },
@@ -137,7 +137,8 @@
         { "$ref": "#/$defs/channel_articulated" },
         { "$ref": "#/$defs/channel_blendshape" },
         { "$ref": "#/$defs/channel_direction" },
-        { "$ref": "#/$defs/channel_scalar" }
+        { "$ref": "#/$defs/channel_scalar" },
+        { "$ref": "#/$defs/channel_latent" }
       ]
     },
     "channel_articulated": {
@@ -189,6 +190,25 @@
       "properties": {
         "type": { "const": "scalar" },
         "parent": { "type": "string" }
+      }
+    },
+    "channel_latent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "parent", "dtype", "shape"],
+      "properties": {
+        "type": { "const": "latent" },
+        "parent": { "type": "string" },
+        "dtype": { "type": "string", "enum": ["float16", "float32", "int8", "uint8"] },
+        "shape": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 },
+          "minItems": 1
+        },
+        "decoder_hint": {
+          "type": "string",
+          "description": "Opaque non-semantic decoder identifier; not natural-language meaning."
+        }
       }
     },
     "joint_pose": {

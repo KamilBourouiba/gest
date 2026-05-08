@@ -1,0 +1,25 @@
+HIERARCHY
+ROOT world
+{
+  OFFSET 0 0 0
+  CHANNELS 0
+  JOINT hand_root
+  {
+    OFFSET 0 0 0
+    CHANNELS 3 Xposition Yposition Zposition
+    JOINT hand_tip
+    {
+      OFFSET 0 0 0
+      CHANNELS 3 Xposition Yposition Zposition
+      End Site
+      {
+        OFFSET 0 0 0
+      }
+    }
+  }
+}
+MOTION
+Frames: 2
+Frame Time: 0.0166667
+0.00 1.00 0.30 0.06 1.10 0.32
+0.04 1.03 0.31 0.10 1.13 0.33

@@ -1,6 +1,7 @@
 """gest package: .gest gesture IR in JSON or YAML."""
 
 from gest.document import load_json_bytes, load_json_path, load_path, load_yaml_path
+from gest.profiles import get_profile, normalize_profile, profile_names
 from gest.sgm import GestCompileError, compile_to_bytes
 from gest.sgm_decode import GestDecodeError, decode_sgm_bytes, decoded_to_pose_timeline
 from gest.sgm_roundtrip import gest_document_from_sgm_bytes
@@ -15,6 +16,9 @@ __all__ = [
     "load_path",
     "compile_to_bytes",
     "GestCompileError",
+    "get_profile",
+    "normalize_profile",
+    "profile_names",
     "decode_sgm_bytes",
     "decoded_to_pose_timeline",
     "GestDecodeError",

@@ -26,7 +26,7 @@ The machine-readable schema is `schema/gest-0.2.schema.json`.
 | Field | Type | Description |
 |-------|------|-------------|
 | `version` | string | Format semver (e.g. `"0.2"`). |
-| `profile` | string | `full`, `rt`, `cmp`, `neural_bundle`. |
+| `profile` | string | `full`, `rt`, `cmp`, `neural` (`neural_bundle` is a compatibility alias). |
 | `fps` | number | Nominal rate (> 0). |
 | `time_base` | string | `seconds` or `ticks`. |
 | `units` | string | e.g. `meters`. |
@@ -44,7 +44,7 @@ No free-form prose fields on the SGPU hot path.
 
 Each key is a channel id. Each value is an object with at least:
 
-- `type`: `articulated` | `blendshape_set` | `direction` | `scalar` (profile-extensible).
+- `type`: `articulated` | `blendshape_set` | `direction` | `scalar` | `latent` (profile-extensible).
 - `parent`: anchor or parent channel when applicable.
 
 Common types:
@@ -52,6 +52,7 @@ Common types:
 - **articulated:** `joint_count`, `joint_layout` (topology id, e.g. a known rig), `state_enum` (closed list of **non-linguistic** state labels).
 - **blendshape_set:** `blendshape_names_sha256` or an external table referenced by hash.
 - **direction:** `representation: unit_vector`.
+- **latent:** non-semantic tensor channel with `dtype`, `shape`, and optional opaque `decoder_hint`.
 
 ## 6. Interpolation (`interpolation_defaults`)
 
@@ -81,7 +82,9 @@ Segments with `seq`, `channels_digest`, `byte_range` for chunked files or contai
 | `full` | Keyframes, tangents, full hierarchy. |
 | `rt` | Low latency, compact poses, few or no external blobs. |
 | `cmp` | Pose dictionaries, sparsity, strong deltas. |
-| `neural_bundle` | Latents + numeric control; decode outside low-level execution spec. |
+| `neural` | Latents + numeric control; decode outside low-level execution spec. |
+
+Detailed profile definitions live in `docs/profiles.md`, with validating examples under `examples/profiles/`.
 
 ## 10. Compilation to `.sgm` (informative)
 

@@ -140,16 +140,40 @@ Authoritative detail: **[`spec/gest-spec.md`](spec/gest-spec.md)**. Machine vali
 
 ---
 
+## Profiles
+
+`.gest` now defines four concrete profiles:
+
+- **`full`** — authoring, archival interchange, datasets, full hierarchy/tangents.
+- **`rt`** — low-latency runtime chunks and streaming-friendly inline poses.
+- **`cmp`** — compressed transport/storage with blobs, deltas, or pose dictionaries.
+- **`neural`** — non-semantic latent tensors and numeric controls for learned decoders.
+
+See [`docs/profiles.md`](docs/profiles.md) and validating examples under [`examples/profiles/`](examples/profiles/). `neural_bundle` is treated as a compatibility alias for `neural`; new files should use `neural`.
+
+---
+
 ## Repository layout
 
 | Path | Role |
 |------|------|
 | [`spec/gest-spec.md`](spec/gest-spec.md) | Human-readable specification (v0.2) |
 | [`schema/gest-0.2.schema.json`](schema/gest-0.2.schema.json) | JSON Schema (Draft 2020-12) |
+| [`docs/profiles.md`](docs/profiles.md) | Concrete profile definitions: `full`, `rt`, `cmp`, `neural` |
+| [`docs/importers.md`](docs/importers.md) | MediaPipe-like, OpenXR-like, and BVH-like import adapters |
+| [`docs/format-comparison.md`](docs/format-comparison.md) | Comparison with BVH, FBX, glTF/VRM, OpenXR, MediaPipe, and ROS logs |
+| [`docs/research-paper.md`](docs/research-paper.md) | arXiv-style research artifact: claims, method, results, limits, next experiments |
+| [`docs/comparison-stats.md`](docs/comparison-stats.md) | Measured byte-size comparison from the generated demo clip |
+| [`docs/multi-demo-stats.md`](docs/multi-demo-stats.md) | Multi-scenario stats across JSON/YAML/CSV/BVH-like/landmark JSON/SGM |
+| [`docs/industry-benchmark.md`](docs/industry-benchmark.md) | Measured industry-facing comparison against BVH/glTF/OpenXR/MediaPipe/ROS-like shapes |
+| [`docs/research-artifact-manifest.md`](docs/research-artifact-manifest.md) | Reproducibility manifest with artifact hashes and aggregate evidence |
 | [`include/sgm_v1.h`](include/sgm_v1.h) | C macros for SGM v1 magic, kinds, opcodes |
 | [`src/gest/sgm_constants.py`](src/gest/sgm_constants.py) | Same constants in Python (**must match** the header; enforced by tests) |
 | [`examples/minimal.gest.json`](examples/minimal.gest.json) | Minimal valid example (JSON) |
 | [`examples/minimal.gest.yaml`](examples/minimal.gest.yaml) | Same example (YAML) |
+| [`examples/imports/`](examples/imports/) | Sample MediaPipe/OpenXR/BVH-like source inputs for importers |
+| [`examples/profiles/`](examples/profiles/) | Validating examples for each profile |
+| [`demo/`](demo/) | Runnable XR-style dual-hand demo: generate `.gest`, compile `.sgm`, decode, recover |
 | [`src/gest/`](src/gest/) | Loaders, validation, compile / decode / lossy recovery |
 
 ---
@@ -173,6 +197,79 @@ Core package dependencies are **empty**; everything heavy is optional so lightwe
 
 ---
 
+## Run the real demo
+
+The demo builds a deterministic **XR-style dual-hand arc** clip with:
+
+- `left_hand` and `right_hand`: simplified 5-point articulated hands (`joint_count: 5`, `joint_value_stride: 3`);
+- `gaze`: normalized direction vector;
+- 9 frames over 1.2 seconds at 60 fps;
+- closed machine states (`shape_0`, `shape_1`, `shape_2`) instead of natural-language semantics.
+
+```bash
+python demo/run_demo.py
+```
+
+It writes:
+
+| Output | Meaning |
+|--------|---------|
+| `demo/xr_dual_hand_arc.gest.json` | Source `.gest` clip |
+| `demo/out/xr_dual_hand_arc.sgm` | SGM v1 bytecode |
+| `demo/out/xr_dual_hand_arc.dump.json` | Decoded channel table + timeline |
+| `demo/out/xr_dual_hand_arc.recovered.gest.json` | Lossy draft `.gest` rebuilt from bytecode |
+
+Render the same clip to an MP4 preview:
+
+```bash
+python demo/render_video.py
+python demo/render_avatar_video.py
+open demo/out/xr_dual_hand_arc.mp4   # macOS
+open demo/out/xr_avatar_playback.mp4 # macOS
+```
+
+The renderer now produces a more cinematic showcase: motion trails, ambient particles, a pipeline/status panel, an SGM opcode strip, and a compact comparison panel showing how `.gest` differs from BVH, FBX, glTF/VRM, OpenXR, MediaPipe, and ROS bags.
+
+There is also a browser-based avatar viewer:
+
+```bash
+python -m http.server 8000
+open http://localhost:8000/demo/avatar_viewer.html
+open http://localhost:8000/demo/avatar_3d_viewer.html
+```
+
+`avatar_viewer.html` is a 2D canvas rig. `avatar_3d_viewer.html` is a dependency-free **WebGL breakthrough lab** with a perspective camera, orbiting 3D view, live `.gest -> validate -> .sgm -> decode -> avatar` pipeline stages, measured comparison panels, scenario benchmarks, and a bytecode-style stream. Both load `xr_dual_hand_arc.gest.json` and map `left_hand`, `right_hand`, and `gaze` onto a humanoid rig.
+
+Generate real comparison stats from the same clip:
+
+```bash
+python demo/comparison_stats.py
+```
+
+Current measured byte counts for this demo: `.sgm v1` **1,562 B**, `.gest gzip` **1,366 B**, landmark JSON baseline **2,536 B**, BVH-like text baseline **3,309 B**, CSV baseline **3,712 B**, compact `.gest` JSON **4,679 B**, pretty `.gest` JSON **12,477 B**. These are local measurements from concrete transforms of the same numeric samples; see [`docs/comparison-stats.md`](docs/comparison-stats.md) for methodology.
+
+Generate multiple real-life scenario demos and compare serialization methods/languages:
+
+```bash
+python demo/multi_demos.py
+python demo/industry_benchmark.py
+python demo/research_artifact.py
+```
+
+That creates `.gest` sources under `demo/generated/`, `.sgm` bytecode under `demo/out/`, measured reports at [`docs/comparison-stats.md`](docs/comparison-stats.md), [`docs/multi-demo-stats.md`](docs/multi-demo-stats.md), and [`docs/industry-benchmark.md`](docs/industry-benchmark.md), plus a reproducibility manifest at [`docs/research-artifact-manifest.md`](docs/research-artifact-manifest.md). The current scenarios are XR replay, robot teleoperation, rehabilitation symmetry logging, and a pose7 dataset microclip. Each scenario is compared as `.sgm`, compact/pretty/gzipped `.gest` JSON, `.gest` YAML, CSV rows, landmark JSON, BVH-like text, plus industry-like glTF animation JSON, OpenXR traces, MediaPipe landmarks, and ROS-like JSONL logs.
+
+Then inspect it with the standard tools:
+
+```bash
+gest-validate demo/xr_dual_hand_arc.gest.json
+gest-dump-sgm demo/out/xr_dual_hand_arc.sgm
+gest-sgm-to-gest demo/out/xr_dual_hand_arc.sgm demo/out/recovered_from_cli.gest.json
+```
+
+This is a concrete example of the intended loop: **author / capture motion → validate IR → compile bytecode → debug or recover from bytecode**.
+
+---
+
 ## Command-line tools
 
 All entry points are registered when the package is installed:
@@ -180,6 +277,7 @@ All entry points are registered when the package is installed:
 | Command | Description |
 |---------|-------------|
 | **`gest-validate`** `<path>` | JSON Schema + IR invariants. Accepts `.json` or `.yaml` / `.yml` (requires PyYAML for YAML). |
+| **`gest-import`** `<kind>` `<input>` `<output>` | Import MediaPipe-like JSON, OpenXR-like JSON, or BVH-like text into `.gest`. |
 | **`gest-compile`** `<input>` `<output.sgm>` | Compile to SGM v1. Validates by default; **`--no-validate`** skips checks. |
 | **`gest-dump-sgm`** `<input.sgm>` | Decode bytecode to JSON (channel table + reconstructed `timeline`) on stdout. |
 | **`gest-sgm-to-gest`** `<input.sgm>` `<out.json>` | **Lossy** rebuild of a draft `.gest` document (minimal `space`, synthetic labels — see spec §18). |
@@ -189,6 +287,10 @@ Examples:
 ```bash
 gest-validate examples/minimal.gest.json
 gest-validate examples/minimal.gest.yaml
+
+gest-import mediapipe examples/imports/mediapipe_sample.json /tmp/mediapipe.gest.json
+gest-import openxr examples/imports/openxr_sample.json /tmp/openxr.gest.json
+gest-import bvh examples/imports/simple_sample.bvh /tmp/bvh.gest.json
 
 gest-compile examples/minimal.gest.json /tmp/out.sgm
 gest-dump-sgm /tmp/out.sgm | head
@@ -265,6 +367,9 @@ Tests cover schema validation, IR invariants, YAML loading, SGM compile/decode, 
 | Full IR semantics, streaming, profiles | [`spec/gest-spec.md`](spec/gest-spec.md) |
 | JSON shape for validators | [`schema/gest-0.2.schema.json`](schema/gest-0.2.schema.json) |
 | SGM v1 wire layout & recovery caveats | Spec §16–§18 |
+| Research artifact draft | [`docs/research-paper.md`](docs/research-paper.md) |
+| Industry-facing benchmark | [`docs/industry-benchmark.md`](docs/industry-benchmark.md) |
+| Reproducibility manifest | [`docs/research-artifact-manifest.md`](docs/research-artifact-manifest.md) |
 
 ---
 
