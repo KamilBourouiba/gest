@@ -19,6 +19,10 @@
     .scenario { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #263149; padding-top: 7px; margin-top: 7px; }
     #bytecode { font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #64d8ff; word-break: break-all; line-height: 1.45; }
     button { background: #9fffc0; color: #071017; border: 0; border-radius: 5px; padding: 8px 12px; font-weight: 700; }
+    a.button { display: inline-block; background: #9fffc0; color: #071017; border-radius: 5px; padding: 8px 12px; font-weight: 800; text-decoration: none; }
+    a.link { color: #9fffc0; text-decoration: none; }
+    .proof { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: center; }
+    .proof strong { color: #9fffc0; font-size: 28px; }
     input { accent-color: #9fffc0; }
     .muted { color: #8ea0bc; }
     canvas { width: 100vw; height: 100vh; display: block; }
@@ -28,6 +32,7 @@
   <div id="hud">
     <div><strong>.gest Breakthrough Lab</strong><br><span class="muted">IR validation, SGM bytecode, measured stats, 3D playback</span></div>
     <div><button id="play">Play / Pause</button></div>
+    <div><a class="button" href="https://github.com/KamilBourouiba/gest" target="_blank" rel="noreferrer">GitHub</a></div>
     <div><label class="muted">time <input id="scrub" type="range" min="0" max="1.2" step="0.001" value="0"></label></div>
     <div id="status" class="muted">loading xr_dual_hand_arc.gest.json</div>
   </div>
@@ -51,6 +56,10 @@
       <div id="scenarios" class="muted">loading multi-demo stats...</div>
     </div>
     <div class="panel">
+      <h2>Industry proof</h2>
+      <div id="industry" class="muted">loading industry comparison...</div>
+    </div>
+    <div class="panel">
       <h2>SGM bytecode stream</h2>
       <div id="bytecode">53 47 4d 01 ... waiting for clip</div>
     </div>
@@ -64,6 +73,7 @@
     const statusEl = document.getElementById("status");
     const metricsEl = document.getElementById("metrics");
     const scenariosEl = document.getElementById("scenarios");
+    const industryEl = document.getElementById("industry");
     const bytecodeEl = document.getElementById("bytecode");
     const stages = ["gest", "validate", "sgm", "decode", "avatar"].map(id => document.getElementById(`stage-${id}`));
     if (!gl) statusEl.textContent = "WebGL is not available";
@@ -184,6 +194,20 @@
         const compact = scenario.artifacts.find(item => item.name === ".gest JSON compact");
         return `<div class="scenario"><span>${scenario.title}</span><strong>${fmtBytes(sgm.bytes)}</strong><span class="muted">${compact.ratio_to_sgm.toFixed(2)}x JSON</span></div>`;
       }).join("");
+    }
+    function renderIndustryStats(stats) {
+      const wins = stats.scenarios.reduce((sum, scenario) => sum + scenario.sgm_smaller_than.length, 0);
+      const total = stats.scenarios.reduce((sum, scenario) => sum + scenario.artifacts.length - 1, 0);
+      const xr = stats.scenarios.find(scenario => scenario.slug === "xr_dual_hand_arc");
+      const artifactByName = Object.fromEntries(xr.artifacts.map(item => [item.name, item]));
+      industryEl.innerHTML = [
+        `<div class="proof"><strong>${wins}/${total}</strong><span>SGM byte-size wins against generated industry-like baselines</span></div>`,
+        `<div class="scenario"><span>XR OpenXR-like trace</span><strong>${fmtBytes(artifactByName["OpenXR-like action trace JSON"].bytes)}</strong><span class="muted">${artifactByName["OpenXR-like action trace JSON"].ratio_to_sgm.toFixed(2)}x SGM</span></div>`,
+        `<div class="scenario"><span>XR MediaPipe-like JSON</span><strong>${fmtBytes(artifactByName["MediaPipe-like landmark JSON"].bytes)}</strong><span class="muted">${artifactByName["MediaPipe-like landmark JSON"].ratio_to_sgm.toFixed(2)}x SGM</span></div>`,
+        `<div class="scenario"><span>XR SGM bytecode</span><strong>${fmtBytes(artifactByName[".sgm v1 bytecode"].bytes)}</strong><span class="muted">runtime artifact</span></div>`,
+        `<div class="muted">Exception documented: BVH-like pose7 microclip is slightly smaller than SGM.</div>`,
+        `<div><a class="link" href="/docs/industry-benchmark">Read full benchmark</a></div>`
+      ].join("");
     }
     function syntheticBytecode(t, max) {
       const seed = Math.floor((t / max) * 255) || 1;
@@ -356,6 +380,9 @@
     fetchJson(["out/multi-demo-stats.json", "data/multi-demo-stats.json"])
       .then(renderScenarioStats)
       .catch(e => { scenariosEl.textContent = "run python demo/multi_demos.py for scenario stats"; console.error(e); });
+    fetchJson(["out/industry-benchmark.json", "data/industry-benchmark.json"])
+      .then(renderIndustryStats)
+      .catch(e => { industryEl.textContent = "run python demo/industry_benchmark.py for industry stats"; console.error(e); });
     updateControls();
     requestAnimationFrame(render);
   </script>

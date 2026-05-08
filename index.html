@@ -3,26 +3,76 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=/demo/avatar_3d_viewer">
   <title>.gest Breakthrough Lab</title>
   <style>
     body {
       margin: 0;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
       background: #080c14;
       color: #e8eef8;
       font: 16px system-ui, sans-serif;
     }
-    a { color: #9fffc0; }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 56px 20px;
+    }
+    h1 { font-size: clamp(36px, 8vw, 76px); line-height: .96; margin: 0 0 18px; }
+    p { color: #a8b7d0; line-height: 1.65; max-width: 760px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
+    a.button {
+      display: inline-block;
+      color: #071017;
+      background: #9fffc0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    a.secondary {
+      color: #e8eef8;
+      background: transparent;
+      border: 1px solid #33415f;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 34px;
+    }
+    .stat {
+      border: 1px solid #263149;
+      border-radius: 10px;
+      padding: 16px;
+      background: rgba(10, 14, 22, .78);
+    }
+    .stat strong { display: block; font-size: 30px; color: #9fffc0; }
+    .stat span { color: #8ea0bc; }
+    code { color: #64d8ff; }
   </style>
 </head>
 <body>
   <main>
     <h1>.gest Breakthrough Lab</h1>
-    <p>Opening the WebGL 3D demo...</p>
-    <p><a href="/demo/avatar_3d_viewer">Open the demo manually</a></p>
+    <p>
+      A non-semantic gesture IR that validates motion, compiles to SGM bytecode,
+      decodes back for debugging, and plays on a WebGL avatar.
+    </p>
+    <div class="actions">
+      <a class="button" href="/demo/avatar_3d_viewer">Open WebGL demo</a>
+      <a class="button secondary" href="https://github.com/KamilBourouiba/gest">View on GitHub</a>
+      <a class="button secondary" href="/docs/industry-benchmark">Industry benchmark</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong>27/28</strong><span>SGM byte-size wins against generated industry-like baselines</span></div>
+      <div class="stat"><strong>33</strong><span>tests passing for validation, demos, importers, and benchmarks</span></div>
+      <div class="stat"><strong>4</strong><span>benchmark scenarios: XR, robot teleop, rehab, dataset microclip</span></div>
+      <div class="stat"><strong>1,562 B</strong><span>SGM bytecode size for the XR dual-hand demo clip</span></div>
+    </div>
+    <p>
+      Important caveat: one tiny BVH-like text microclip is slightly smaller
+      than <code>.sgm</code>. The project documents that exception instead of hiding it.
+    </p>
   </main>
 </body>
 </html>

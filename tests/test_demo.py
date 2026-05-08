@@ -54,8 +54,12 @@ def test_webgl_3d_avatar_viewer_exists():
     assert "playBtn.textContent" in html
     assert "comparison-stats.json" in html
     assert "multi-demo-stats.json" in html
+    assert "industry-benchmark.json" in html
     assert "data/comparison-stats.json" in html
     assert "data/multi-demo-stats.json" in html
+    assert "data/industry-benchmark.json" in html
+    assert "https://github.com/KamilBourouiba/gest" in html
+    assert "Industry proof" in html
     assert "gl_PointSize >" not in html
     assert "u_isPoint" in html
 
@@ -65,6 +69,14 @@ def test_2d_avatar_viewer_has_working_play_fallback():
     assert "FALLBACK_DOC" in html
     assert "play.textContent" in html
     assert "setDoc(FALLBACK_DOC" in html
+
+
+def test_vercel_landing_page_links_demo_github_and_stats():
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "/demo/avatar_3d_viewer" in html
+    assert "https://github.com/KamilBourouiba/gest" in html
+    assert "27/28" in html
+    assert "1,562 B" in html
 
 
 def test_comparison_stats_are_measured_from_demo():
