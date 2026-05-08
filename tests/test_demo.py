@@ -79,6 +79,14 @@ def test_vercel_landing_page_links_demo_github_and_stats():
     assert "1,562 B" in html
 
 
+def test_hosted_industry_benchmark_page_exists():
+    html = (ROOT / "docs" / "industry-benchmark.html").read_text(encoding="utf-8")
+    assert ".gest Industry Benchmark" in html
+    assert "27/28" in html
+    assert "Back to WebGL demo" in html
+    assert "Raw benchmark JSON" in html
+
+
 def test_comparison_stats_are_measured_from_demo():
     stats = build_comparison_stats()
     assert stats["demo"]["frames"] == 9
