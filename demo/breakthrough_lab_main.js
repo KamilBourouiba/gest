@@ -35,7 +35,7 @@ let decodeUs = 0;
 let comparisonStats = null;
 let frameId = 0;
 let lastBytecodePulse = -1;
-let running = true;
+let running = false;
 
 const stage = createHumanoidStage(canvas);
 
