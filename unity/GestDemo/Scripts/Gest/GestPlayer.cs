@@ -20,8 +20,8 @@ namespace Gest.Runtime
         [Header("Source")]
         public GestSourceMode source = GestSourceMode.SgmBytecode;
         public int clipIndex;
-        public string sgmAsset = "xr_dual_hand_arc";
-        public string gestJsonAsset = "xr_dual_hand_arc.gest";
+        public string sgmAsset = "xr_pinch_grasp";
+        public string gestJsonAsset = "xr_pinch_grasp.gest";
 
         [Header("Playback")]
         public bool playOnStart = true;

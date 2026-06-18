@@ -19,10 +19,10 @@ This manifest records the reproducible surface for the `.gest` draft artifact.
 
 ## Aggregate evidence
 
-- Scenarios: `4`
-- Sample floats: `1647`
-- Decoded opcodes: `278`
-- Industry baseline wins: `27`
+- Scenarios: `6`
+- Sample floats: `4308`
+- Decoded opcodes: `808`
+- Industry baseline wins: `41`
 
 ## Tracked artifacts
 
@@ -30,10 +30,10 @@ This manifest records the reproducible surface for the `.gest` draft artifact.
 - `spec/gest-spec.md`: present, `7174` bytes, sha256 `c8b25b3e3e091ef879df9eb113095ec23f3529cb99e9d00398affeb077cc30b9`
 - `include/sgm_v1.h`: present, `673` bytes, sha256 `e03b8a80c792b89d54255012fe9d03bc0ff4a8b489fbb86f192f3acd9c89b811`
 - `src/gest/sgm_constants.py`: present, `512` bytes, sha256 `9334c9545270c70d2ba071f73bef692d62717b65963356133016276eb3fed09d`
-- `demo/xr_dual_hand_arc.gest.json`: present, `12477` bytes, sha256 `1ee45c7e785c97ae7b1b794de1761c5fc8692bc74ef15bb40d36f0c32381d751`
-- `demo/out/xr_dual_hand_arc.sgm`: present, `1562` bytes, sha256 `33be221c1f7da5389f5a240f8e3cbb5e9d806ab920d187fb99546899e50e9a3f`
-- `demo/out/comparison-stats.json`: present, `2288` bytes, sha256 `b33f8acb1649f55d74cf3296a268ff613dcd3f55c8587bed848e619634e0fd50`
-- `demo/out/multi-demo-stats.json`: present, `6883` bytes, sha256 `31f07adaf5bdc938cab82a54cf5d1e06132390f7dac46e2b1d1d44bb2b9ae2a4`
-- `demo/out/industry-benchmark.json`: present, `12738` bytes, sha256 `4c7473996ef20a992eda620f596154badc282cde3bf1717535ef10a99435c740`
-- `docs/research-paper.md`: present, `6695` bytes, sha256 `04918fac4996dfe78395aacf36be6e1343ed33e1cd900d9db8eaddc33b5274fd`
-- `docs/industry-benchmark.md`: present, `4569` bytes, sha256 `9871c42ac2e92e6275c5411c32b9c8b9c980b5e20150354445c6fa930b08bf6c`
+- `demo/xr_dual_hand_arc.gest.json`: present, `38656` bytes, sha256 `2da30074436bef2e5c065acddb35cd237b40e64ad4c4c92451f76179c4b61b7d`
+- `demo/out/xr_dual_hand_arc.sgm`: present, `5426` bytes, sha256 `e8a3f4378d133063d46a718c53dc51058aa8016fc94c492551a79248720ba334`
+- `demo/out/comparison-stats.json`: present, `2293` bytes, sha256 `30497912cfc8d5ee54fbe4c3d0283fe347e69b4b5b015f5b3e4441261266cc85`
+- `demo/out/multi-demo-stats.json`: present, `10057` bytes, sha256 `355d466d87c553545c3b3ad93e37341318ca1d487ee9bea5dda29c28430a01a8`
+- `demo/out/industry-benchmark.json`: present, `17444` bytes, sha256 `fdf9e1ebf227b85e072c25bb419fd7ff14e034f110847bc19902cd32c6f4f557`
+- `docs/research-paper.md`: present, `7002` bytes, sha256 `c9548fcef201c1f92f22cc3757ac1a2ba2534ceb58f80544ea2e8280dedfef86`
+- `docs/industry-benchmark.md`: present, `5976` bytes, sha256 `9547372a1b4ab278d707977752f6f345b388000b5f24a4b0d2bb7eab7531bd96`

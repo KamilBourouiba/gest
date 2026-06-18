@@ -1,7 +1,7 @@
 {
   "demo": {
-    "frames": 9,
-    "duration_seconds": 1.2,
+    "frames": 32,
+    "duration_seconds": 2.4,
     "fps": 60,
     "channels": [
       "gaze",
@@ -9,71 +9,71 @@
       "right_hand"
     ],
     "floats_per_frame": 33,
-    "sample_floats_total": 297,
-    "decoded_opcode_count": 54
+    "sample_floats_total": 1056,
+    "decoded_opcode_count": 192
   },
   "artifacts": [
     {
       "name": ".gest JSON pretty",
       "kind": "gest",
-      "bytes": 12477,
-      "ratio_to_sgm": 7.988,
+      "bytes": 38656,
+      "ratio_to_sgm": 7.124,
       "notes": "Readable canonical IR with schema-facing metadata"
     },
     {
       "name": ".gest JSON compact",
       "kind": "gest",
-      "bytes": 4679,
-      "ratio_to_sgm": 2.996,
+      "bytes": 13529,
+      "ratio_to_sgm": 2.493,
       "notes": "Same IR without whitespace"
     },
     {
       "name": ".gest JSON gzip",
       "kind": "gest",
-      "bytes": 1366,
-      "ratio_to_sgm": 0.875,
+      "bytes": 2513,
+      "ratio_to_sgm": 0.463,
       "notes": "Compressed compact JSON"
     },
     {
       "name": ".sgm v1 bytecode",
       "kind": "sgm",
-      "bytes": 1562,
+      "bytes": 5426,
       "ratio_to_sgm": 1.0,
       "notes": "Runtime bytecode emitted by the reference compiler"
     },
     {
       "name": "Recovered .gest JSON",
       "kind": "gest",
-      "bytes": 15348,
-      "ratio_to_sgm": 9.826,
+      "bytes": 51312,
+      "ratio_to_sgm": 9.457,
       "notes": "Lossy draft recovered from .sgm"
     },
     {
       "name": "Decoded SGM dump",
       "kind": "debug",
-      "bytes": 14657,
-      "ratio_to_sgm": 9.383,
+      "bytes": 50621,
+      "ratio_to_sgm": 9.329,
       "notes": "Debug channel table + reconstructed timeline"
     },
     {
       "name": "Landmark JSON baseline",
       "kind": "baseline",
-      "bytes": 2536,
-      "ratio_to_sgm": 1.624,
+      "bytes": 9102,
+      "ratio_to_sgm": 1.677,
       "notes": "ML-style landmarks only; no IR validation contract"
     },
     {
       "name": "CSV landmarks baseline",
       "kind": "baseline",
-      "bytes": 3712,
-      "ratio_to_sgm": 2.376,
+      "bytes": 13670,
+      "ratio_to_sgm": 2.519,
       "notes": "Flat rows; easy to inspect, weak structure"
     },
     {
       "name": "BVH-like text baseline",
       "kind": "baseline",
-      "bytes": 3309,
-      "ratio_to_sgm": 2.118,
+      "bytes": 7890,
+      "ratio_to_sgm": 1.454,
       "notes": "Sampled skeleton-style text baseline for this clip"
     }
   ],

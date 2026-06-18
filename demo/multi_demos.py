@@ -18,7 +18,13 @@ for path in (ROOT, SRC):
     if s not in sys.path:
         sys.path.insert(0, s)
 
-from demo.run_demo import build_demo_document  # noqa: E402
+
+from demo.showcase_clips import (  # noqa: E402
+    build_assembly_pick_place_document,
+    build_presentation_sweep_document,
+    build_xr_pinch_grasp_document,
+)
+from demo.motion_library import bezier4, ease_in_out, gaze_toward, HEAD, six_point_hand, smoothstep, unit  # noqa: E402
 from gest.sgm import compile_to_bytes  # noqa: E402
 from gest.sgm_decode import decode_sgm_bytes  # noqa: E402
 from gest.validate import validate_all  # noqa: E402
@@ -94,32 +100,36 @@ def build_robot_teleop_demo() -> DemoCase:
         "right_hand": {
             "type": "articulated",
             "parent": "chest",
-            "joint_count": 4,
+            "joint_count": 5,
             "joint_value_stride": 3,
-            "joint_layout": "demo_robot_gripper_proxy_v1",
+            "joint_layout": "demo_five_point_hand_v1",
             "state_enum": ["shape_0", "shape_1", "shape_2"],
         },
         "gaze": {"type": "direction", "parent": "head", "representation": "unit_vector"},
     }
+    from demo.motion_library import five_point_hand
+
     timeline: list[dict[str, Any]] = []
-    for i in range(14):
-        u = i / 13
-        root = (
-            _round3(0.35 - 0.42 * u),
-            _round3(1.0 + 0.22 * math.sin(math.pi * u)),
-            _round3(0.55 - 0.30 * u),
-        )
-        target = [-0.10, 1.12, 0.28]
-        gaze = _unit([target[0], target[1] - 1.58, target[2]])
+    rest = (0.36, 1.04, 0.20)
+    target = (-0.08, 0.96, 0.46)
+    for i in range(24):
+        u = i / 23
+        t = _round3(u * 1.8)
+        if u < 0.55:
+            root = bezier4(rest, (0.22, 1.02, 0.28), (0.10, 0.99, 0.38), target, smoothstep(u / 0.55))
+            pinch = smoothstep(max(0.0, (u - 0.38) / 0.17))
+        else:
+            root = bezier4(target, (-0.04, 1.06, 0.44), (-0.02, 1.12, 0.40), (-0.06, 1.10, 0.36), smoothstep((u - 0.55) / 0.45))
+            pinch = 1.0 - smoothstep((u - 0.75) / 0.25)
         timeline.append(
             {
-                "t": _round3(u * 1.6),
+                "t": t,
                 "pose": {
                     "right_hand": {
-                        "joints": {"format": "raw_float32", "values": _hand_points(root, 4, 0.8 + 0.4 * u)},
-                        "state_index": 0 if u < 0.45 else 1 if u < 0.8 else 2,
+                        "joints": {"format": "raw_float32", "values": five_point_hand(root, 1.0 - 0.5 * pinch, pinch)},
+                        "state_index": 0 if u < 0.4 else 1 if u < 0.75 else 2,
                     },
-                    "gaze": {"dir": gaze},
+                    "gaze": {"dir": gaze_toward(HEAD, target)},
                 },
             }
         )
@@ -154,25 +164,26 @@ def build_rehab_symmetry_demo() -> DemoCase:
         "gaze": {"type": "direction", "parent": "head", "representation": "unit_vector"},
     }
     timeline: list[dict[str, Any]] = []
-    for i in range(20):
-        u = i / 19
-        wave = math.sin(math.tau * u)
-        lift = 0.10 + 0.12 * abs(wave)
-        left_root = (-0.30 + 0.12 * wave, 1.02 + lift, 0.38)
-        right_root = (0.30 - 0.12 * wave, 1.02 + lift * 0.92, 0.38)
+    for i in range(28):
+        u = i / 27
+        wave = math.sin(math.tau * u * 1.5)
+        lift = 0.14 + 0.20 * abs(wave)
+        left_root = (-0.32 + 0.18 * wave, 1.04 + lift, 0.40)
+        right_root = (0.32 - 0.18 * wave, 1.04 + lift * 0.94, 0.40)
+        pinch = 0.35 * max(0.0, wave)
         timeline.append(
             {
-                "t": _round3(u * 2.2),
+                "t": _round3(u * 2.6),
                 "pose": {
                     "left_hand": {
-                        "joints": {"format": "raw_float32", "values": _hand_points(left_root, 6, 0.9)},
+                        "joints": {"format": "raw_float32", "values": six_point_hand(left_root, 1.0, pinch)},
                         "state_index": 0 if wave >= 0 else 1,
                     },
                     "right_hand": {
-                        "joints": {"format": "raw_float32", "values": _hand_points(right_root, 6, 0.9)},
+                        "joints": {"format": "raw_float32", "values": six_point_hand(right_root, 1.0, pinch)},
                         "state_index": 0 if wave >= 0 else 1,
                     },
-                    "gaze": {"dir": _unit([0.0, -0.42, 0.42])},
+                    "gaze": {"dir": _unit([0.0, -0.38, 0.48])},
                 },
             }
         )
@@ -242,13 +253,34 @@ def build_dataset_microclip_demo() -> DemoCase:
 
 
 def demo_cases() -> list[DemoCase]:
-    xr = DemoCase(
-        slug="xr_dual_hand_arc",
-        title="XR dual-hand arc",
-        real_life_case="A headset or depth-camera clip records coordinated hand motion and gaze for QA replay.",
-        doc=build_demo_document(),
-    )
-    return [xr, build_robot_teleop_demo(), build_rehab_symmetry_demo(), build_dataset_microclip_demo()]
+    return [
+        DemoCase(
+            slug="xr_pinch_grasp",
+            title="XR pinch & grasp",
+            real_life_case="Both hands converge on a workspace object, pinch, lift, and release — readable XR manipulation without semantic labels.",
+            doc=build_xr_pinch_grasp_document(),
+        ),
+        DemoCase(
+            slug="assembly_pick_place",
+            title="Assembly pick & place",
+            real_life_case="A single manipulator cycle: approach, grasp, lift, translate, and release over a bin.",
+            doc=build_assembly_pick_place_document(),
+        ),
+        DemoCase(
+            slug="presentation_sweep",
+            title="Presentation sweep",
+            real_life_case="A presenter sweeps one hand across a virtual panel while gaze tracks the gesture.",
+            doc=build_presentation_sweep_document(),
+        ),
+        DemoCase(
+            slug="rehab_symmetry_loop",
+            title="Rehabilitation symmetry loop",
+            real_life_case="Bilateral hand symmetry practice with larger amplitude and visible open/close phases.",
+            doc=build_rehab_symmetry_demo().doc,
+        ),
+        build_robot_teleop_demo(),
+        build_dataset_microclip_demo(),
+    ]
 
 
 def _compact_json_bytes(obj: Any) -> bytes:

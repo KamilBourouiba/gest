@@ -9,68 +9,110 @@ Measured from generated `.gest` scenarios in `demo/generated/`.
 - CSV, landmark JSON, and BVH-like baselines are concrete transforms, not official exporters.
 - Ratios are relative to .sgm v1 bytecode for that same scenario.
 
-## XR dual-hand arc
+## XR pinch & grasp
 
-A headset or depth-camera clip records coordinated hand motion and gaze for QA replay.
+Both hands converge on a workspace object, pinch, lift, and release — readable XR manipulation without semantic labels.
 
-- Frames: `9`
-- Duration: `1.2s`
+- Frames: `32`
+- Duration: `2.4s`
 - Channels: `gaze, left_hand, right_hand`
-- Sample floats: `297`
-- Decoded opcodes: `54`
+- Sample floats: `1056`
+- Decoded opcodes: `192`
 
 | Artifact | Kind | Bytes | Ratio to `.sgm` |
 |----------|------|-------|-----------------|
-| `.sgm v1 bytecode` | `binary` | 1562 | 1.0x |
-| `.gest JSON compact` | `json` | 4679 | 2.996x |
-| `.gest JSON pretty` | `json` | 12477 | 7.988x |
-| `.gest JSON gzip` | `gzip` | 1366 | 0.875x |
-| `.gest YAML` | `yaml` | 8245 | 5.278x |
-| `Landmark JSON baseline` | `json` | 2536 | 1.624x |
-| `CSV rows baseline` | `csv` | 4124 | 2.64x |
-| `BVH-like text baseline` | `bvh-like` | 3319 | 2.125x |
+| `.sgm v1 bytecode` | `binary` | 5426 | 1.0x |
+| `.gest JSON compact` | `json` | 13529 | 2.493x |
+| `.gest JSON pretty` | `json` | 38656 | 7.124x |
+| `.gest JSON gzip` | `gzip` | 2513 | 0.463x |
+| `.gest YAML` | `yaml` | 25471 | 4.694x |
+| `Landmark JSON baseline` | `json` | 9102 | 1.677x |
+| `CSV rows baseline` | `csv` | 15094 | 2.782x |
+| `BVH-like text baseline` | `bvh-like` | 7900 | 1.456x |
+
+## Assembly pick & place
+
+A single manipulator cycle: approach, grasp, lift, translate, and release over a bin.
+
+- Frames: `40`
+- Duration: `2.2s`
+- Channels: `gaze, right_hand`
+- Sample floats: `720`
+- Decoded opcodes: `160`
+
+| Artifact | Kind | Bytes | Ratio to `.sgm` |
+|----------|------|-------|-----------------|
+| `.sgm v1 bytecode` | `binary` | 3875 | 1.0x |
+| `.gest JSON compact` | `json` | 9667 | 2.495x |
+| `.gest JSON pretty` | `json` | 27691 | 7.146x |
+| `.gest JSON gzip` | `gzip` | 1963 | 0.507x |
+| `.gest YAML` | `yaml` | 17648 | 4.554x |
+| `Landmark JSON baseline` | `json` | 6811 | 1.758x |
+| `CSV rows baseline` | `csv` | 10297 | 2.657x |
+| `BVH-like text baseline` | `bvh-like` | 5211 | 1.345x |
+
+## Presentation sweep
+
+A presenter sweeps one hand across a virtual panel while gaze tracks the gesture.
+
+- Frames: `36`
+- Duration: `2.0s`
+- Channels: `gaze, right_hand`
+- Sample floats: `648`
+- Decoded opcodes: `144`
+
+| Artifact | Kind | Bytes | Ratio to `.sgm` |
+|----------|------|-------|-----------------|
+| `.sgm v1 bytecode` | `binary` | 3491 | 1.0x |
+| `.gest JSON compact` | `json` | 8804 | 2.522x |
+| `.gest JSON pretty` | `json` | 25092 | 7.188x |
+| `.gest JSON gzip` | `gzip` | 2092 | 0.599x |
+| `.gest YAML` | `yaml` | 16005 | 4.585x |
+| `Landmark JSON baseline` | `json` | 6157 | 1.764x |
+| `CSV rows baseline` | `csv` | 9265 | 2.654x |
+| `BVH-like text baseline` | `bvh-like` | 4811 | 1.378x |
+
+## Rehabilitation symmetry loop
+
+Bilateral hand symmetry practice with larger amplitude and visible open/close phases.
+
+- Frames: `28`
+- Duration: `2.6s`
+- Channels: `gaze, left_hand, right_hand`
+- Sample floats: `1092`
+- Decoded opcodes: `168`
+
+| Artifact | Kind | Bytes | Ratio to `.sgm` |
+|----------|------|-------|-----------------|
+| `.sgm v1 bytecode` | `binary` | 5426 | 1.0x |
+| `.gest JSON compact` | `json` | 12738 | 2.348x |
+| `.gest JSON pretty` | `json` | 37079 | 6.834x |
+| `.gest JSON gzip` | `gzip` | 1368 | 0.252x |
+| `.gest YAML` | `yaml` | 24810 | 4.572x |
+| `Landmark JSON baseline` | `json` | 9133 | 1.683x |
+| `CSV rows baseline` | `csv` | 15677 | 2.889x |
+| `BVH-like text baseline` | `bvh-like` | 8432 | 1.554x |
 
 ## Robot teleoperation reach
 
 A remote operator guides a gripper-like end effector toward a target while gaze stays locked on the workspace.
 
-- Frames: `14`
-- Duration: `1.6s`
+- Frames: `24`
+- Duration: `1.8s`
 - Channels: `gaze, right_hand`
-- Sample floats: `210`
-- Decoded opcodes: `56`
+- Sample floats: `432`
+- Decoded opcodes: `96`
 
 | Artifact | Kind | Bytes | Ratio to `.sgm` |
 |----------|------|-------|-----------------|
-| `.sgm v1 bytecode` | `binary` | 1211 | 1.0x |
-| `.gest JSON compact` | `json` | 3547 | 2.929x |
-| `.gest JSON pretty` | `json` | 9627 | 7.95x |
-| `.gest JSON gzip` | `gzip` | 942 | 0.778x |
-| `.gest YAML` | `yaml` | 6044 | 4.991x |
-| `Landmark JSON baseline` | `json` | 2123 | 1.753x |
-| `CSV rows baseline` | `csv` | 3025 | 2.498x |
-| `BVH-like text baseline` | `bvh-like` | 2026 | 1.673x |
-
-## Rehabilitation symmetry loop
-
-A practice session records bilateral hand movement quality without storing any natural-language instruction or patient notes.
-
-- Frames: `20`
-- Duration: `2.2s`
-- Channels: `gaze, left_hand, right_hand`
-- Sample floats: `780`
-- Decoded opcodes: `120`
-
-| Artifact | Kind | Bytes | Ratio to `.sgm` |
-|----------|------|-------|-----------------|
-| `.sgm v1 bytecode` | `binary` | 3890 | 1.0x |
-| `.gest JSON compact` | `json` | 9330 | 2.398x |
-| `.gest JSON pretty` | `json` | 26919 | 6.92x |
-| `.gest JSON gzip` | `gzip` | 1819 | 0.468x |
-| `.gest YAML` | `yaml` | 18010 | 4.63x |
-| `Landmark JSON baseline` | `json` | 6517 | 1.675x |
-| `CSV rows baseline` | `csv` | 11205 | 2.88x |
-| `BVH-like text baseline` | `bvh-like` | 6534 | 1.68x |
+| `.sgm v1 bytecode` | `binary` | 2339 | 1.0x |
+| `.gest JSON compact` | `json` | 6091 | 2.604x |
+| `.gest JSON pretty` | `json` | 17141 | 7.328x |
+| `.gest JSON gzip` | `gzip` | 1392 | 0.595x |
+| `.gest YAML` | `yaml` | 10958 | 4.685x |
+| `Landmark JSON baseline` | `json` | 4179 | 1.787x |
+| `CSV rows baseline` | `csv` | 6273 | 2.682x |
+| `BVH-like text baseline` | `bvh-like` | 3571 | 1.527x |
 
 ## Dataset pose7 microclip
 

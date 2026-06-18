@@ -28,59 +28,95 @@ This benchmark compares `.gest` / `.sgm` against concrete industry-like shapes g
 
 ## Scenario measurements
 
-### XR dual-hand arc
+### XR pinch & grasp
 
-- Frames: `9`
+- Frames: `32`
 - Channels: `gaze, left_hand, right_hand`
-- Sample floats: `297`
-- Decoded SGM ops: `54`
+- Sample floats: `1056`
+- Decoded SGM ops: `192`
 
 | Artifact | Kind | Bytes | Ratio to `.sgm` |
 |----------|------|-------|-----------------|
-| `.sgm v1 bytecode` | `gest-runtime` | 1562 | 1.0x |
-| `.gest JSON compact` | `gest-ir` | 4679 | 2.996x |
-| `MediaPipe-like landmark JSON` | `industry-like` | 5897 | 3.775x |
-| `OpenXR-like action trace JSON` | `industry-like` | 14914 | 9.548x |
-| `glTF animation JSON shape` | `industry-like` | 5488 | 3.513x |
-| `BVH-like skeleton text` | `industry-like` | 3019 | 1.933x |
-| `ROS-like JSONL topics` | `industry-like` | 18710 | 11.978x |
-| `CSV rows` | `baseline` | 4121 | 2.638x |
+| `.sgm v1 bytecode` | `gest-runtime` | 5426 | 1.0x |
+| `.gest JSON compact` | `gest-ir` | 13529 | 2.493x |
+| `MediaPipe-like landmark JSON` | `industry-like` | 21022 | 3.874x |
+| `OpenXR-like action trace JSON` | `industry-like` | 53036 | 9.774x |
+| `glTF animation JSON shape` | `industry-like` | 11183 | 2.061x |
+| `BVH-like skeleton text` | `industry-like` | 7235 | 1.333x |
+| `ROS-like JSONL topics` | `industry-like` | 67101 | 12.367x |
+| `CSV rows` | `baseline` | 15091 | 2.781x |
 
-### Robot teleoperation reach
+### Assembly pick & place
 
-- Frames: `14`
+- Frames: `40`
 - Channels: `gaze, right_hand`
-- Sample floats: `210`
-- Decoded SGM ops: `56`
+- Sample floats: `720`
+- Decoded SGM ops: `160`
 
 | Artifact | Kind | Bytes | Ratio to `.sgm` |
 |----------|------|-------|-----------------|
-| `.sgm v1 bytecode` | `gest-runtime` | 1211 | 1.0x |
-| `.gest JSON compact` | `gest-ir` | 3547 | 2.929x |
-| `MediaPipe-like landmark JSON` | `industry-like` | 4419 | 3.649x |
-| `OpenXR-like action trace JSON` | `industry-like` | 10455 | 8.633x |
-| `glTF animation JSON shape` | `industry-like` | 2878 | 2.377x |
-| `BVH-like skeleton text` | `industry-like` | 1633 | 1.348x |
-| `ROS-like JSONL topics` | `industry-like` | 12558 | 10.37x |
-| `CSV rows` | `baseline` | 3022 | 2.495x |
+| `.sgm v1 bytecode` | `gest-runtime` | 3875 | 1.0x |
+| `.gest JSON compact` | `gest-ir` | 9667 | 2.495x |
+| `MediaPipe-like landmark JSON` | `industry-like` | 14493 | 3.74x |
+| `OpenXR-like action trace JSON` | `industry-like` | 35881 | 9.26x |
+| `glTF animation JSON shape` | `industry-like` | 6652 | 1.717x |
+| `BVH-like skeleton text` | `industry-like` | 4364 | 1.126x |
+| `ROS-like JSONL topics` | `industry-like` | 43920 | 11.334x |
+| `CSV rows` | `baseline` | 10294 | 2.657x |
+
+### Presentation sweep
+
+- Frames: `36`
+- Channels: `gaze, right_hand`
+- Sample floats: `648`
+- Decoded SGM ops: `144`
+
+| Artifact | Kind | Bytes | Ratio to `.sgm` |
+|----------|------|-------|-----------------|
+| `.sgm v1 bytecode` | `gest-runtime` | 3491 | 1.0x |
+| `.gest JSON compact` | `gest-ir` | 8804 | 2.522x |
+| `MediaPipe-like landmark JSON` | `industry-like` | 13044 | 3.736x |
+| `OpenXR-like action trace JSON` | `industry-like` | 32323 | 9.259x |
+| `glTF animation JSON shape` | `industry-like` | 6143 | 1.76x |
+| `BVH-like skeleton text` | `industry-like` | 4005 | 1.147x |
+| `ROS-like JSONL topics` | `industry-like` | 39520 | 11.321x |
+| `CSV rows` | `baseline` | 9262 | 2.653x |
 
 ### Rehabilitation symmetry loop
 
-- Frames: `20`
+- Frames: `28`
 - Channels: `gaze, left_hand, right_hand`
-- Sample floats: `780`
-- Decoded SGM ops: `120`
+- Sample floats: `1092`
+- Decoded SGM ops: `168`
 
 | Artifact | Kind | Bytes | Ratio to `.sgm` |
 |----------|------|-------|-----------------|
-| `.sgm v1 bytecode` | `gest-runtime` | 3890 | 1.0x |
-| `.gest JSON compact` | `gest-ir` | 9330 | 2.398x |
-| `MediaPipe-like landmark JSON` | `industry-like` | 15139 | 3.892x |
-| `OpenXR-like action trace JSON` | `industry-like` | 39287 | 10.099x |
-| `glTF animation JSON shape` | `industry-like` | 9941 | 2.556x |
-| `BVH-like skeleton text` | `industry-like` | 6067 | 1.56x |
-| `ROS-like JSONL topics` | `industry-like` | 49968 | 12.845x |
-| `CSV rows` | `baseline` | 11202 | 2.88x |
+| `.sgm v1 bytecode` | `gest-runtime` | 5426 | 1.0x |
+| `.gest JSON compact` | `gest-ir` | 12738 | 2.348x |
+| `MediaPipe-like landmark JSON` | `industry-like` | 21187 | 3.905x |
+| `OpenXR-like action trace JSON` | `industry-like` | 54999 | 10.136x |
+| `glTF animation JSON shape` | `industry-like` | 12255 | 2.259x |
+| `BVH-like skeleton text` | `industry-like` | 7829 | 1.443x |
+| `ROS-like JSONL topics` | `industry-like` | 69968 | 12.895x |
+| `CSV rows` | `baseline` | 15674 | 2.889x |
+
+### Robot teleoperation reach
+
+- Frames: `24`
+- Channels: `gaze, right_hand`
+- Sample floats: `432`
+- Decoded SGM ops: `96`
+
+| Artifact | Kind | Bytes | Ratio to `.sgm` |
+|----------|------|-------|-----------------|
+| `.sgm v1 bytecode` | `gest-runtime` | 2339 | 1.0x |
+| `.gest JSON compact` | `gest-ir` | 6091 | 2.604x |
+| `MediaPipe-like landmark JSON` | `industry-like` | 8757 | 3.744x |
+| `OpenXR-like action trace JSON` | `industry-like` | 21633 | 9.249x |
+| `glTF animation JSON shape` | `industry-like` | 4772 | 2.04x |
+| `BVH-like skeleton text` | `industry-like` | 2964 | 1.267x |
+| `ROS-like JSONL topics` | `industry-like` | 26424 | 11.297x |
+| `CSV rows` | `baseline` | 6270 | 2.681x |
 
 ### Dataset pose7 microclip
 

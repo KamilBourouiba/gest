@@ -229,7 +229,8 @@
     function renderIndustryStats(stats) {
       const wins = stats.scenarios.reduce((sum, scenario) => sum + scenario.sgm_smaller_than.length, 0);
       const total = stats.scenarios.reduce((sum, scenario) => sum + scenario.artifacts.length - 1, 0);
-      const xr = stats.scenarios.find(scenario => scenario.slug === "xr_dual_hand_arc");
+      const xr = stats.scenarios.find(scenario => scenario.slug === "xr_pinch_grasp")
+        || stats.scenarios.find(scenario => scenario.slug === "xr_dual_hand_arc");
       const artifactByName = Object.fromEntries(xr.artifacts.map(item => [item.name, item]));
       industryEl.innerHTML = [
         `<div class="proof"><strong>${wins}/${total}</strong><span>SGM byte-size wins against generated industry-like baselines</span></div>`,

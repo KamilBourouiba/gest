@@ -26,7 +26,7 @@ def test_real_demo_document_validates_and_compiles():
     decoded = decode_sgm_bytes(blob)
     assert decoded.fps == pytest.approx(60)
     assert len(decoded.channels) == 3
-    assert sum(1 for op in decoded.ops if op.kind == "frame") == 9
+    assert sum(1 for op in decoded.ops if op.kind == "frame") == 32
 
 
 def test_video_renderer_samples_normalized_pose_shape():
@@ -85,7 +85,7 @@ def test_breakthrough_lab_has_browser_sgm_decoder_and_mannequin():
     assert "testgest" in html
     assert "0x53" in js or "0x53, 0x47" in js
     assert "decodeSgmBytes" in js
-    for slug in ("xr_dual_hand_arc", "robot_teleop_reach"):
+    for slug in ("xr_pinch_grasp", "assembly_pick_place", "robot_teleop_reach"):
         assert (ROOT / "demo" / "data" / "clips" / f"{slug}.sgm").is_file()
 
 
@@ -97,8 +97,8 @@ def test_vercel_landing_page_links_demo_github_and_stats():
     assert "github-fab" in html
     assert "github-shake" in html
     assert "viewBox=\"0 0 16 16\"" in html
-    assert "27/28" in html
-    assert "1,562 B" in html
+    assert "41/42" in html
+    assert "5,426 B" in html
     assert "testgest" in html
     assert "38" in html
 
@@ -116,20 +116,22 @@ def test_hosted_industry_benchmark_page_exists():
 
 def test_comparison_stats_are_measured_from_demo():
     stats = build_comparison_stats()
-    assert stats["demo"]["frames"] == 9
-    assert stats["demo"]["sample_floats_total"] == 297
+    assert stats["demo"]["frames"] == 32
+    assert stats["demo"]["sample_floats_total"] == 1056
     by_name = {item["name"]: item for item in stats["artifacts"]}
-    assert by_name[".sgm v1 bytecode"]["bytes"] == 1562
+    assert by_name[".sgm v1 bytecode"]["bytes"] == 5426
     assert by_name[".gest JSON gzip"]["bytes"] < by_name[".sgm v1 bytecode"]["bytes"]
     assert by_name["CSV landmarks baseline"]["ratio_to_sgm"] > 1.0
 
 
 def test_multi_demo_stats_cover_multiple_real_life_cases():
     stats = build_multi_demo_stats()
-    assert len(stats["scenarios"]) == 4
+    assert len(stats["scenarios"]) == 6
     slugs = {scenario["slug"] for scenario in stats["scenarios"]}
     assert {
-        "xr_dual_hand_arc",
+        "xr_pinch_grasp",
+        "assembly_pick_place",
+        "presentation_sweep",
         "robot_teleop_reach",
         "rehab_symmetry_loop",
         "dataset_pose7_microclip",
@@ -152,16 +154,16 @@ def test_research_artifact_manifest_summarizes_reproducibility():
     manifest = build_research_artifact_manifest()
     assert manifest["artifact"] == ".gest research artifact"
     assert manifest["sgm"]["format_version"] == 1
-    assert manifest["multi_demo"]["scenario_count"] == 4
-    assert manifest["multi_demo"]["sample_floats_total"] == 1647
-    assert manifest["industry_benchmark"]["generated_baseline_wins"] == 27
-    assert manifest["multi_demo"]["compact_json_ratio_to_sgm"]["xr_dual_hand_arc"] > 1.0
+    assert manifest["multi_demo"]["scenario_count"] == 6
+    assert manifest["multi_demo"]["sample_floats_total"] == 4308
+    assert manifest["industry_benchmark"]["generated_baseline_wins"] == 41
+    assert manifest["multi_demo"]["compact_json_ratio_to_sgm"]["xr_pinch_grasp"] > 1.0
     assert any(item["path"] == "docs/research-paper.md" for item in manifest["tracked_artifacts"])
 
 
 def test_industry_benchmark_proves_specific_wins_and_limits():
     stats = build_industry_benchmark()
-    assert len(stats["scenarios"]) == 4
+    assert len(stats["scenarios"]) == 6
     assert any("tiny pose7 microclip" in item for item in stats["proven_better_where"])
     pose7 = next(s for s in stats["scenarios"] if s["slug"] == "dataset_pose7_microclip")
     by_name = {item["name"]: item for item in pose7["artifacts"]}

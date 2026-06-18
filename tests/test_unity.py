@@ -30,19 +30,19 @@ def test_unity_package_scripts_exist():
 
 
 def test_unity_streaming_assets_match_python_decoder():
-    sgm_path = UNITY / "StreamingAssets" / "xr_dual_hand_arc.sgm"
+    sgm_path = UNITY / "StreamingAssets" / "xr_pinch_grasp.sgm"
     assert sgm_path.is_file()
     decoded = decode_sgm_bytes(sgm_path.read_bytes())
     timeline = decoded_to_pose_timeline(decoded)
     assert len(decoded.channels) == 3
-    assert len(timeline) == 9
+    assert len(timeline) == 32
     assert timeline[0]["pose"]["left_hand"]["joints"]["values"][0] < 0
 
     robot = UNITY / "StreamingAssets" / "robot_teleop_reach.sgm"
     assert robot.is_file()
     robot_decoded = decode_sgm_bytes(robot.read_bytes())
     assert len(robot_decoded.channels) == 2
-    assert len(decoded_to_pose_timeline(robot_decoded)) == 14
+    assert len(decoded_to_pose_timeline(robot_decoded)) == 24
 
 
 def test_unity_readme_mentions_runtime_path():

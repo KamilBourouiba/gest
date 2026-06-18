@@ -82,60 +82,60 @@
     {
       "artifacts": [
         {
-          "bytes": 1562,
+          "bytes": 5426,
           "kind": "gest-runtime",
           "name": ".sgm v1 bytecode",
           "notes": "Compiled runtime bytecode with channel table and opcodes",
           "ratio_to_sgm": 1.0
         },
         {
-          "bytes": 4679,
+          "bytes": 13529,
           "kind": "gest-ir",
           "name": ".gest JSON compact",
           "notes": "Validated non-semantic IR document",
-          "ratio_to_sgm": 2.996
+          "ratio_to_sgm": 2.493
         },
         {
-          "bytes": 5897,
+          "bytes": 21022,
           "kind": "industry-like",
           "name": "MediaPipe-like landmark JSON",
           "notes": "Landmark detector output shape",
-          "ratio_to_sgm": 3.775
+          "ratio_to_sgm": 3.874
         },
         {
-          "bytes": 14914,
+          "bytes": 53036,
           "kind": "industry-like",
           "name": "OpenXR-like action trace JSON",
           "notes": "Durable trace shaped after XR joint/action frames",
-          "ratio_to_sgm": 9.548
+          "ratio_to_sgm": 9.774
         },
         {
-          "bytes": 5488,
+          "bytes": 11183,
           "kind": "industry-like",
           "name": "glTF animation JSON shape",
           "notes": "glTF-style node animation structure without binary GLB packing",
-          "ratio_to_sgm": 3.513
+          "ratio_to_sgm": 2.061
         },
         {
-          "bytes": 3019,
+          "bytes": 7235,
           "kind": "industry-like",
           "name": "BVH-like skeleton text",
           "notes": "Mocap-style hierarchy and MOTION rows",
-          "ratio_to_sgm": 1.933
+          "ratio_to_sgm": 1.333
         },
         {
-          "bytes": 18710,
+          "bytes": 67101,
           "kind": "industry-like",
           "name": "ROS-like JSONL topics",
           "notes": "Robotics topic log exported as JSON lines",
-          "ratio_to_sgm": 11.978
+          "ratio_to_sgm": 12.367
         },
         {
-          "bytes": 4121,
+          "bytes": 15091,
           "kind": "baseline",
           "name": "CSV rows",
           "notes": "Flat rows with weak structure",
-          "ratio_to_sgm": 2.638
+          "ratio_to_sgm": 2.781
         }
       ],
       "channels": [
@@ -143,11 +143,11 @@
         "left_hand",
         "right_hand"
       ],
-      "decoded_opcode_count": 54,
-      "duration_seconds": 1.2,
+      "decoded_opcode_count": 192,
+      "duration_seconds": 2.4,
       "fps": 60,
-      "frames": 9,
-      "sample_floats_total": 297,
+      "frames": 32,
+      "sample_floats_total": 1056,
       "sgm_smaller_than": [
         ".gest JSON compact",
         "MediaPipe-like landmark JSON",
@@ -157,158 +157,238 @@
         "ROS-like JSONL topics",
         "CSV rows"
       ],
-      "slug": "xr_dual_hand_arc",
-      "title": "XR dual-hand arc"
+      "slug": "xr_pinch_grasp",
+      "title": "XR pinch & grasp"
     },
     {
       "artifacts": [
         {
-          "bytes": 1211,
+          "bytes": 3875,
           "kind": "gest-runtime",
           "name": ".sgm v1 bytecode",
           "notes": "Compiled runtime bytecode with channel table and opcodes",
           "ratio_to_sgm": 1.0
         },
         {
-          "bytes": 3547,
+          "bytes": 9667,
           "kind": "gest-ir",
           "name": ".gest JSON compact",
           "notes": "Validated non-semantic IR document",
-          "ratio_to_sgm": 2.929
-        },
-        {
-          "bytes": 4419,
-          "kind": "industry-like",
-          "name": "MediaPipe-like landmark JSON",
-          "notes": "Landmark detector output shape",
-          "ratio_to_sgm": 3.649
-        },
-        {
-          "bytes": 10455,
-          "kind": "industry-like",
-          "name": "OpenXR-like action trace JSON",
-          "notes": "Durable trace shaped after XR joint/action frames",
-          "ratio_to_sgm": 8.633
-        },
-        {
-          "bytes": 2878,
-          "kind": "industry-like",
-          "name": "glTF animation JSON shape",
-          "notes": "glTF-style node animation structure without binary GLB packing",
-          "ratio_to_sgm": 2.377
-        },
-        {
-          "bytes": 1633,
-          "kind": "industry-like",
-          "name": "BVH-like skeleton text",
-          "notes": "Mocap-style hierarchy and MOTION rows",
-          "ratio_to_sgm": 1.348
-        },
-        {
-          "bytes": 12558,
-          "kind": "industry-like",
-          "name": "ROS-like JSONL topics",
-          "notes": "Robotics topic log exported as JSON lines",
-          "ratio_to_sgm": 10.37
-        },
-        {
-          "bytes": 3022,
-          "kind": "baseline",
-          "name": "CSV rows",
-          "notes": "Flat rows with weak structure",
           "ratio_to_sgm": 2.495
-        }
-      ],
-      "channels": [
-        "gaze",
-        "right_hand"
-      ],
-      "decoded_opcode_count": 56,
-      "duration_seconds": 1.6,
-      "fps": 90,
-      "frames": 14,
-      "sample_floats_total": 210,
-      "sgm_smaller_than": [
-        ".gest JSON compact",
-        "MediaPipe-like landmark JSON",
-        "OpenXR-like action trace JSON",
-        "glTF animation JSON shape",
-        "BVH-like skeleton text",
-        "ROS-like JSONL topics",
-        "CSV rows"
-      ],
-      "slug": "robot_teleop_reach",
-      "title": "Robot teleoperation reach"
-    },
-    {
-      "artifacts": [
-        {
-          "bytes": 3890,
-          "kind": "gest-runtime",
-          "name": ".sgm v1 bytecode",
-          "notes": "Compiled runtime bytecode with channel table and opcodes",
-          "ratio_to_sgm": 1.0
         },
         {
-          "bytes": 9330,
-          "kind": "gest-ir",
-          "name": ".gest JSON compact",
-          "notes": "Validated non-semantic IR document",
-          "ratio_to_sgm": 2.398
-        },
-        {
-          "bytes": 15139,
+          "bytes": 14493,
           "kind": "industry-like",
           "name": "MediaPipe-like landmark JSON",
           "notes": "Landmark detector output shape",
-          "ratio_to_sgm": 3.892
+          "ratio_to_sgm": 3.74
         },
         {
-          "bytes": 39287,
+          "bytes": 35881,
           "kind": "industry-like",
           "name": "OpenXR-like action trace JSON",
           "notes": "Durable trace shaped after XR joint/action frames",
-          "ratio_to_sgm": 10.099
+          "ratio_to_sgm": 9.26
         },
         {
-          "bytes": 9941,
+          "bytes": 6652,
           "kind": "industry-like",
           "name": "glTF animation JSON shape",
           "notes": "glTF-style node animation structure without binary GLB packing",
-          "ratio_to_sgm": 2.556
+          "ratio_to_sgm": 1.717
         },
         {
-          "bytes": 6067,
+          "bytes": 4364,
           "kind": "industry-like",
           "name": "BVH-like skeleton text",
           "notes": "Mocap-style hierarchy and MOTION rows",
-          "ratio_to_sgm": 1.56
+          "ratio_to_sgm": 1.126
         },
         {
-          "bytes": 49968,
+          "bytes": 43920,
           "kind": "industry-like",
           "name": "ROS-like JSONL topics",
           "notes": "Robotics topic log exported as JSON lines",
-          "ratio_to_sgm": 12.845
+          "ratio_to_sgm": 11.334
         },
         {
-          "bytes": 11202,
+          "bytes": 10294,
           "kind": "baseline",
           "name": "CSV rows",
           "notes": "Flat rows with weak structure",
-          "ratio_to_sgm": 2.88
+          "ratio_to_sgm": 2.657
         }
       ],
       "channels": [
         "gaze",
-        "left_hand",
         "right_hand"
       ],
-      "decoded_opcode_count": 120,
+      "decoded_opcode_count": 160,
       "duration_seconds": 2.2,
       "fps": 60,
-      "frames": 20,
-      "sample_floats_total": 780,
+      "frames": 40,
+      "sample_floats_total": 720,
+      "sgm_smaller_than": [
+        ".gest JSON compact",
+        "MediaPipe-like landmark JSON",
+        "OpenXR-like action trace JSON",
+        "glTF animation JSON shape",
+        "BVH-like skeleton text",
+        "ROS-like JSONL topics",
+        "CSV rows"
+      ],
+      "slug": "assembly_pick_place",
+      "title": "Assembly pick & place"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 3491,
+          "kind": "gest-runtime",
+          "name": ".sgm v1 bytecode",
+          "notes": "Compiled runtime bytecode with channel table and opcodes",
+          "ratio_to_sgm": 1.0
+        },
+        {
+          "bytes": 8804,
+          "kind": "gest-ir",
+          "name": ".gest JSON compact",
+          "notes": "Validated non-semantic IR document",
+          "ratio_to_sgm": 2.522
+        },
+        {
+          "bytes": 13044,
+          "kind": "industry-like",
+          "name": "MediaPipe-like landmark JSON",
+          "notes": "Landmark detector output shape",
+          "ratio_to_sgm": 3.736
+        },
+        {
+          "bytes": 32323,
+          "kind": "industry-like",
+          "name": "OpenXR-like action trace JSON",
+          "notes": "Durable trace shaped after XR joint/action frames",
+          "ratio_to_sgm": 9.259
+        },
+        {
+          "bytes": 6143,
+          "kind": "industry-like",
+          "name": "glTF animation JSON shape",
+          "notes": "glTF-style node animation structure without binary GLB packing",
+          "ratio_to_sgm": 1.76
+        },
+        {
+          "bytes": 4005,
+          "kind": "industry-like",
+          "name": "BVH-like skeleton text",
+          "notes": "Mocap-style hierarchy and MOTION rows",
+          "ratio_to_sgm": 1.147
+        },
+        {
+          "bytes": 39520,
+          "kind": "industry-like",
+          "name": "ROS-like JSONL topics",
+          "notes": "Robotics topic log exported as JSON lines",
+          "ratio_to_sgm": 11.321
+        },
+        {
+          "bytes": 9262,
+          "kind": "baseline",
+          "name": "CSV rows",
+          "notes": "Flat rows with weak structure",
+          "ratio_to_sgm": 2.653
+        }
+      ],
+      "channels": [
+        "gaze",
+        "right_hand"
+      ],
+      "decoded_opcode_count": 144,
+      "duration_seconds": 2.0,
+      "fps": 60,
+      "frames": 36,
+      "sample_floats_total": 648,
+      "sgm_smaller_than": [
+        ".gest JSON compact",
+        "MediaPipe-like landmark JSON",
+        "OpenXR-like action trace JSON",
+        "glTF animation JSON shape",
+        "BVH-like skeleton text",
+        "ROS-like JSONL topics",
+        "CSV rows"
+      ],
+      "slug": "presentation_sweep",
+      "title": "Presentation sweep"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 5426,
+          "kind": "gest-runtime",
+          "name": ".sgm v1 bytecode",
+          "notes": "Compiled runtime bytecode with channel table and opcodes",
+          "ratio_to_sgm": 1.0
+        },
+        {
+          "bytes": 12738,
+          "kind": "gest-ir",
+          "name": ".gest JSON compact",
+          "notes": "Validated non-semantic IR document",
+          "ratio_to_sgm": 2.348
+        },
+        {
+          "bytes": 21187,
+          "kind": "industry-like",
+          "name": "MediaPipe-like landmark JSON",
+          "notes": "Landmark detector output shape",
+          "ratio_to_sgm": 3.905
+        },
+        {
+          "bytes": 54999,
+          "kind": "industry-like",
+          "name": "OpenXR-like action trace JSON",
+          "notes": "Durable trace shaped after XR joint/action frames",
+          "ratio_to_sgm": 10.136
+        },
+        {
+          "bytes": 12255,
+          "kind": "industry-like",
+          "name": "glTF animation JSON shape",
+          "notes": "glTF-style node animation structure without binary GLB packing",
+          "ratio_to_sgm": 2.259
+        },
+        {
+          "bytes": 7829,
+          "kind": "industry-like",
+          "name": "BVH-like skeleton text",
+          "notes": "Mocap-style hierarchy and MOTION rows",
+          "ratio_to_sgm": 1.443
+        },
+        {
+          "bytes": 69968,
+          "kind": "industry-like",
+          "name": "ROS-like JSONL topics",
+          "notes": "Robotics topic log exported as JSON lines",
+          "ratio_to_sgm": 12.895
+        },
+        {
+          "bytes": 15674,
+          "kind": "baseline",
+          "name": "CSV rows",
+          "notes": "Flat rows with weak structure",
+          "ratio_to_sgm": 2.889
+        }
+      ],
+      "channels": [
+        "gaze",
+        "left_hand",
+        "right_hand"
+      ],
+      "decoded_opcode_count": 168,
+      "duration_seconds": 2.6,
+      "fps": 60,
+      "frames": 28,
+      "sample_floats_total": 1092,
       "sgm_smaller_than": [
         ".gest JSON compact",
         "MediaPipe-like landmark JSON",
@@ -320,6 +400,86 @@
       ],
       "slug": "rehab_symmetry_loop",
       "title": "Rehabilitation symmetry loop"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 2339,
+          "kind": "gest-runtime",
+          "name": ".sgm v1 bytecode",
+          "notes": "Compiled runtime bytecode with channel table and opcodes",
+          "ratio_to_sgm": 1.0
+        },
+        {
+          "bytes": 6091,
+          "kind": "gest-ir",
+          "name": ".gest JSON compact",
+          "notes": "Validated non-semantic IR document",
+          "ratio_to_sgm": 2.604
+        },
+        {
+          "bytes": 8757,
+          "kind": "industry-like",
+          "name": "MediaPipe-like landmark JSON",
+          "notes": "Landmark detector output shape",
+          "ratio_to_sgm": 3.744
+        },
+        {
+          "bytes": 21633,
+          "kind": "industry-like",
+          "name": "OpenXR-like action trace JSON",
+          "notes": "Durable trace shaped after XR joint/action frames",
+          "ratio_to_sgm": 9.249
+        },
+        {
+          "bytes": 4772,
+          "kind": "industry-like",
+          "name": "glTF animation JSON shape",
+          "notes": "glTF-style node animation structure without binary GLB packing",
+          "ratio_to_sgm": 2.04
+        },
+        {
+          "bytes": 2964,
+          "kind": "industry-like",
+          "name": "BVH-like skeleton text",
+          "notes": "Mocap-style hierarchy and MOTION rows",
+          "ratio_to_sgm": 1.267
+        },
+        {
+          "bytes": 26424,
+          "kind": "industry-like",
+          "name": "ROS-like JSONL topics",
+          "notes": "Robotics topic log exported as JSON lines",
+          "ratio_to_sgm": 11.297
+        },
+        {
+          "bytes": 6270,
+          "kind": "baseline",
+          "name": "CSV rows",
+          "notes": "Flat rows with weak structure",
+          "ratio_to_sgm": 2.681
+        }
+      ],
+      "channels": [
+        "gaze",
+        "right_hand"
+      ],
+      "decoded_opcode_count": 96,
+      "duration_seconds": 1.8,
+      "fps": 90,
+      "frames": 24,
+      "sample_floats_total": 432,
+      "sgm_smaller_than": [
+        ".gest JSON compact",
+        "MediaPipe-like landmark JSON",
+        "OpenXR-like action trace JSON",
+        "glTF animation JSON shape",
+        "BVH-like skeleton text",
+        "ROS-like JSONL topics",
+        "CSV rows"
+      ],
+      "slug": "robot_teleop_reach",
+      "title": "Robot teleoperation reach"
     },
     {
       "artifacts": [
