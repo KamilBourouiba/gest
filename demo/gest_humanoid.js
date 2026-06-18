@@ -18,32 +18,41 @@ export function createHumanoidStage(canvas) {
   renderer.shadowMap.enabled = true;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x060910);
-  scene.fog = new THREE.Fog(0x060910, 4, 12);
+  scene.background = new THREE.Color(0x0a1018);
+  scene.fog = new THREE.Fog(0x0a1018, 8, 18);
 
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 30);
-  camera.position.set(0, 1.45, 2.4);
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 40);
+  camera.position.set(0.35, 1.42, 2.55);
 
-  scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x1a2030, 0.85));
-  const key = new THREE.DirectionalLight(0xffffff, 1.35);
-  key.position.set(2.2, 4.5, 1.8);
+  scene.add(new THREE.AmbientLight(0x6a7a9a, 0.55));
+  scene.add(new THREE.HemisphereLight(0xd8e8ff, 0x243044, 1.1));
+  const key = new THREE.DirectionalLight(0xffffff, 1.65);
+  key.position.set(2.2, 4.5, 2.4);
   key.castShadow = true;
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0x64d8ff, 0.45);
+  const fill = new THREE.DirectionalLight(0x9fd0ff, 0.75);
+  fill.position.set(-2.8, 2.4, 1.6);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0x64d8ff, 0.55);
   rim.position.set(-2.5, 2.0, -2.0);
   scene.add(rim);
 
+  const spot = new THREE.SpotLight(0xffffff, 2.2, 12, Math.PI / 5, 0.35, 1);
+  spot.position.set(0.4, 3.2, 2.8);
+  spot.target.position.set(0, 1.05, 0);
+  scene.add(spot, spot.target);
+
   const floor = new THREE.Mesh(
-    new THREE.CircleGeometry(0.85, 48),
-    new THREE.MeshStandardMaterial({ color: 0x141a24, roughness: 0.92, metalness: 0.05 }),
+    new THREE.CircleGeometry(1.1, 48),
+    new THREE.MeshStandardMaterial({ color: 0x1c2432, roughness: 0.88, metalness: 0.08 }),
   );
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(0, 0.72, 0.35);
+  floor.position.set(0, 0, 0);
   floor.receiveShadow = true;
   scene.add(floor);
 
-  const grid = new THREE.GridHelper(1.6, 16, 0x263149, 0x182238);
-  grid.position.set(0, 0.721, 0.35);
+  const grid = new THREE.GridHelper(2.2, 22, 0x3a4d6a, 0x243044);
+  grid.position.set(0, 0.001, 0);
   scene.add(grid);
 
   const targets = {
@@ -90,18 +99,22 @@ export function createHumanoidStage(canvas) {
       if (obj.isMesh) {
         obj.castShadow = true;
         obj.receiveShadow = true;
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        for (const mat of mats) {
+          if (!mat) continue;
+          mat.roughness = Math.min(mat.roughness ?? 0.7, 0.72);
+          mat.metalness = Math.min(mat.metalness ?? 0.1, 0.15);
+        }
       }
     });
 
-    modelRoot.scale.setScalar(0.0092);
+    // GLB root Armature already carries scale 0.01 (cm → m). Do not shrink again.
+    modelRoot.scale.setScalar(1);
     modelRoot.position.set(0, 0, 0);
     scene.add(modelRoot);
 
     const box = new THREE.Box3().setFromObject(modelRoot);
-    const floorY = box.min.y;
-    modelRoot.position.y -= floorY;
-    floor.position.y = 0.001;
-    grid.position.y = 0.002;
+    modelRoot.position.y -= box.min.y;
 
     modelRoot.traverse((o) => {
       if (o.isSkinnedMesh && !skinned) skinned = o;
@@ -159,9 +172,9 @@ export function createHumanoidStage(canvas) {
   }
 
   function render(nowMs, rig) {
-    const t = nowMs * 0.00015;
-    camera.position.set(Math.sin(t) * 2.15, 1.42, Math.cos(t) * 2.15 + 0.55);
-    camera.lookAt(0, 1.05, 0.32);
+    const t = nowMs * 0.00012;
+    camera.position.set(0.35 + Math.sin(t) * 0.25, 1.38, 2.55 + Math.cos(t) * 0.18);
+    camera.lookAt(0, 1.02, 0);
 
     if (mixer) mixer.update(1 / 60);
     if (rig) applyRig(rig);
