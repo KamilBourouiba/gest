@@ -85,6 +85,7 @@ def test_breakthrough_lab_has_browser_sgm_decoder_and_mannequin():
     assert "Dual runtime proof" in html
     assert "testgest" in html
     assert "createHumanoidStage" in humanoid
+    assert "dispose" in humanoid
     assert "GestSgm.decodeSgmBytes" in main_js
     assert 'const DEMO = "/demo/"' in main_js
     assert "decodeSgmBytes" in js

@@ -33,6 +33,9 @@ let activeSlug = SCENARIOS[0].slug;
 let sgmBytes = null;
 let decodeUs = 0;
 let comparisonStats = null;
+let frameId = 0;
+let lastBytecodePulse = -1;
+let running = true;
 
 const stage = createHumanoidStage(canvas);
 
@@ -70,60 +73,129 @@ function applyDoc(next, note) {
 }
 
 const lerp = (a, b, u) => a + (b - a) * u;
-const lerp3 = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)];
-const mid = (a, b, u = 0.5) => lerp3(a, b, u);
-const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-const scale = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
-const norm = (a) => {
+const lerp3into = (a, b, u, out) => {
+  out[0] = lerp(a[0], b[0], u);
+  out[1] = lerp(a[1], b[1], u);
+  out[2] = lerp(a[2], b[2], u);
+  return out;
+};
+const scaleInto = (a, s, out) => {
+  out[0] = a[0] * s;
+  out[1] = a[1] * s;
+  out[2] = a[2] * s;
+  return out;
+};
+const normInto = (a, out) => {
   const n = Math.hypot(a[0], a[1], a[2]) || 1;
-  return [a[0] / n, a[1] / n, a[2] / n];
+  out[0] = a[0] / n;
+  out[1] = a[1] / n;
+  out[2] = a[2] / n;
+  return out;
 };
 
-function handPts(frame, ch) {
-  const v = frame.pose[ch]?.joints?.values || [];
-  const out = [];
-  for (let i = 0; i < v.length; i += 3) out.push([v[i], v[i + 1], v[i + 2]]);
-  return out;
+const _gazeEnd = [0, 0, 0];
+const _la = [0, 0, 0];
+const _lb = [0, 0, 0];
+const _ra = [0, 0, 0];
+const _rb = [0, 0, 0];
+const _ga = [0, 0, 0];
+const _gb = [0, 0, 0];
+const _outLw = [0, 0, 0];
+const _outRw = [0, 0, 0];
+const _outGaze = [0, 0, 0];
+const _fallbackL = [-0.22, 1.36, 0.08];
+const _fallbackR = [0.22, 1.36, 0.08];
+
+function wristFromFrame(frame, ch, out) {
+  const v = frame.pose[ch]?.joints?.values;
+  if (!v || v.length < 3) return false;
+  out[0] = v[0];
+  out[1] = v[1];
+  out[2] = v[2];
+  return true;
 }
 
-function frameToPose(fr) {
-  const gaze = fr.pose.gaze?.dir || [0, 0, 1];
-  return { left: handPts(fr, "left_hand"), right: handPts(fr, "right_hand"), gaze: [...gaze] };
-}
-
-function lerpPose(a, b, u) {
-  const n = Math.max(a.left.length, b.left.length);
-  const left = [];
-  const right = [];
-  for (let i = 0; i < n; i++) {
-    if (a.left[i] && b.left[i]) left.push(lerp3(a.left[i], b.left[i], u));
-    if (a.right[i] && b.right[i]) right.push(lerp3(a.right[i], b.right[i], u));
+function gazeFromFrame(frame, out) {
+  const g = frame.pose.gaze?.dir;
+  if (!g) {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 1;
+  } else {
+    out[0] = g[0];
+    out[1] = g[1];
+    out[2] = g[2];
   }
-  return { left, right, gaze: lerp3(a.gaze, b.gaze, u) };
+  return out;
 }
 
 function samplePose(t) {
   const f = doc.timeline;
-  if (t <= f[0].t) return frameToPose(f[0]);
-  if (t >= f[f.length - 1].t) return frameToPose(f[f.length - 1]);
-  for (let i = 0; i < f.length - 1; i++) {
-    const a = f[i];
-    const b = f[i + 1];
-    if (a.t <= t && t <= b.t) return lerpPose(frameToPose(a), frameToPose(b), (t - a.t) / (b.t - a.t));
+  let a = f[0];
+  let b = f[f.length - 1];
+  let u = 0;
+
+  if (t <= f[0].t) {
+    a = f[0];
+    b = f[0];
+    u = 0;
+  } else if (t >= f[f.length - 1].t) {
+    a = f[f.length - 1];
+    b = f[f.length - 1];
+    u = 0;
+  } else {
+    for (let i = 0; i < f.length - 1; i++) {
+      const left = f[i];
+      const right = f[i + 1];
+      if (left.t <= t && t <= right.t) {
+        a = left;
+        b = right;
+        u = (t - left.t) / (right.t - left.t);
+        break;
+      }
+    }
   }
-  return frameToPose(f[0]);
+
+  if (!wristFromFrame(a, "left_hand", _la)) {
+    _la[0] = _fallbackL[0];
+    _la[1] = _fallbackL[1];
+    _la[2] = _fallbackL[2];
+  }
+  if (!wristFromFrame(b, "left_hand", _lb)) {
+    _lb[0] = _la[0];
+    _lb[1] = _la[1];
+    _lb[2] = _la[2];
+  }
+  if (!wristFromFrame(a, "right_hand", _ra)) {
+    _ra[0] = _fallbackR[0];
+    _ra[1] = _fallbackR[1];
+    _ra[2] = _fallbackR[2];
+  }
+  if (!wristFromFrame(b, "right_hand", _rb)) {
+    _rb[0] = _ra[0];
+    _rb[1] = _ra[1];
+    _rb[2] = _ra[2];
+  }
+  gazeFromFrame(a, _ga);
+  gazeFromFrame(b, _gb);
+
+  return {
+    lw: lerp3into(_la, _lb, u, _outLw),
+    rw: lerp3into(_ra, _rb, u, _outRw),
+    gaze: lerp3into(_ga, _gb, u, _outGaze),
+  };
 }
 
 function rig(pose) {
-  const head = [0, 1.58, 0.03];
-  const ls = [-0.22, 1.36, 0.08];
-  const rs = [0.22, 1.36, 0.08];
-  const lw = pose.left[0] || mid(ls, [0.1, 1.1, 0.3], 0.5);
-  const rw = pose.right[0] || mid(rs, [-0.1, 1.1, 0.3], 0.5);
+  normInto(pose.gaze, _gazeEnd);
+  scaleInto(_gazeEnd, 0.55, _gazeEnd);
+  _gazeEnd[0] += 0;
+  _gazeEnd[1] += 1.58;
+  _gazeEnd[2] += 0.03;
   return {
-    lw,
-    rw,
-    gazeEnd: add(head, scale(norm(pose.gaze), 0.55)),
+    lw: pose.lw,
+    rw: pose.rw,
+    gazeEnd: _gazeEnd,
   };
 }
 
@@ -150,6 +222,7 @@ async function loadScenario(slug) {
       const timeline = GestSgm.decodedToTimeline(decoded);
       decodeUs = Math.round(performance.now() - t0);
       sgmBytes = decoded.bytes;
+      lastBytecodePulse = -1;
       applyDoc({ fps: decoded.fps, timeline }, `SGM decoded · ${slug} · ${decodeUs} µs`);
       webglDecodeEl.textContent = `${decodeUs.toLocaleString()} µs`;
       webglBytesEl.textContent = `${sgmBytes.length.toLocaleString()} B SGM · ${timeline.length} frames`;
@@ -207,21 +280,36 @@ function updatePipeline(t, max) {
   stages.forEach((el, i) => el.classList.toggle("on", i <= phase));
   if (sgmBytes) {
     const pulse = 4 + Math.floor((t / max) * (sgmBytes.length - 5));
-    bytecodeEl.innerHTML = GestSgm.formatBytecodeHex(sgmBytes, pulse);
+    if (pulse !== lastBytecodePulse) {
+      lastBytecodePulse = pulse;
+      bytecodeEl.innerHTML = GestSgm.formatBytecodeHex(sgmBytes, pulse);
+    }
   }
 }
 
 function render(now) {
+  if (!running) return;
   let rigPose = null;
   if (doc) {
     const max = doc.timeline[doc.timeline.length - 1].t || 1;
     const t = playing ? (((now - start) / 1000 + offset) % max) : Number(scrub.value);
-    scrub.value = t;
+    if (playing || Math.abs(Number(scrub.value) - t) > 1e-4) scrub.value = t;
     updatePipeline(t, max);
     rigPose = rig(samplePose(t));
   }
   stage.render(now, rigPose);
-  requestAnimationFrame(render);
+  frameId = requestAnimationFrame(render);
+}
+
+function startRender() {
+  if (running) return;
+  running = true;
+  frameId = requestAnimationFrame(render);
+}
+
+function stopRender() {
+  running = false;
+  cancelAnimationFrame(frameId);
 }
 
 document.getElementById("enter").onclick = () => intro.classList.add("hide");
@@ -269,4 +357,14 @@ try {
 }
 
 loadScenario(activeSlug);
-requestAnimationFrame(render);
+startRender();
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopRender();
+  else startRender();
+});
+
+addEventListener("pagehide", () => {
+  stopRender();
+  stage.dispose();
+}, { once: true });
