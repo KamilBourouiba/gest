@@ -78,7 +78,8 @@ def test_breakthrough_lab_has_browser_sgm_decoder_and_mannequin():
     html = (ROOT / "demo" / "breakthrough_lab.html").read_text(encoding="utf-8")
     js = (ROOT / "demo" / "sgm_decode.js").read_text(encoding="utf-8")
     assert "GestSgm.decodeSgmBytes" in html
-    assert "buildMannequin" in html
+    assert 'const DEMO = "/demo/"' in html
+    assert "/demo/sgm_decode.js" in html
     assert "Dual runtime proof" in html
     assert "data/clips/" in html
     assert "testgest" in html

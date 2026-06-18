@@ -133,8 +133,9 @@
   </div>
 
   <canvas id="gl"></canvas>
-  <script src="sgm_decode.js"></script>
+  <script src="/demo/sgm_decode.js"></script>
   <script>
+    const DEMO = "/demo/";
     const SCENARIOS = [
       { slug: "xr_dual_hand_arc", title: "XR dual-hand", tag: "1.5 KB" },
       { slug: "robot_teleop_reach", title: "Robot teleop", tag: "1.2 KB" },
@@ -153,6 +154,8 @@
     const playBtn = document.getElementById("play");
     const scrub = document.getElementById("scrub");
     const statusEl = document.getElementById("status");
+    if (!gl) statusEl.textContent = "WebGL unavailable";
+    else gl.disable(gl.CULL_FACE);
     const bytecodeEl = document.getElementById("bytecode");
     const metricsEl = document.getElementById("metrics");
     const industryEl = document.getElementById("industry");
@@ -167,6 +170,33 @@
     let sourceMode = "sgm", activeSlug = SCENARIOS[0].slug;
     let sgmBytes = null, decodeUs = 0, comparisonStats = null;
     let meshBuf = null, meshCount = 0;
+
+    const FALLBACK_DOC = {
+      fps: 60,
+      timeline: [
+        { t: 0.0, pose: {
+          left_hand: { joints: { values: [-0.28,1.12,0.32,-0.32,1.16,0.33,-0.29,1.20,0.34,-0.25,1.19,0.33,-0.22,1.16,0.32] } },
+          right_hand: { joints: { values: [0.28,1.10,0.34,0.32,1.14,0.35,0.29,1.18,0.36,0.25,1.17,0.35,0.22,1.14,0.34] } },
+          gaze: { dir: [0.0,-0.25,0.96] },
+        }},
+        { t: 1.2, pose: {
+          left_hand: { joints: { values: [-0.10,1.15,0.28,-0.13,1.19,0.29,-0.10,1.23,0.30,-0.07,1.22,0.29,-0.04,1.19,0.28] } },
+          right_hand: { joints: { values: [0.06,1.22,0.26,0.10,1.26,0.27,0.06,1.30,0.28,0.02,1.29,0.27,-0.01,1.26,0.26] } },
+          gaze: { dir: [0.08,-0.30,0.95] },
+        }},
+      ],
+    };
+
+    function applyDoc(next, note) {
+      doc = next;
+      scrub.max = doc.timeline[doc.timeline.length - 1].t || 1;
+      scrub.value = 0;
+      offset = 0;
+      start = performance.now();
+      playing = true;
+      playBtn.textContent = "Pause";
+      statusEl.textContent = note;
+    }
 
     const VERT = `
       attribute vec3 a_pos; attribute vec3 a_nrm; attribute vec3 a_col;
@@ -381,33 +411,39 @@
       try {
         if (sourceMode === "sgm") {
           const buf = await fetchFirst([
-            `data/clips/${slug}.sgm`, `out/${slug}.sgm`
+            `${DEMO}data/clips/${slug}.sgm`,
+            `${DEMO}out/${slug}.sgm`,
           ], false);
           const t0 = performance.now();
           const decoded = GestSgm.decodeSgmBytes(new Uint8Array(buf));
           const timeline = GestSgm.decodedToTimeline(decoded);
           decodeUs = Math.round(performance.now() - t0);
           sgmBytes = decoded.bytes;
-          doc = { fps: decoded.fps, timeline };
+          applyDoc({ fps: decoded.fps, timeline },
+            `SGM decoded in browser · ${slug} · ${decodeUs} µs`);
           webglDecodeEl.textContent = `${decodeUs.toLocaleString()} µs`;
           webglBytesEl.textContent = `${sgmBytes.length.toLocaleString()} B SGM · ${timeline.length} frames`;
-          bytecodeEl.innerHTML = GestSgm.formatBytecodeHex(sgmBytes, 4 + (Math.floor(offset*10)%sgmBytes.length));
+          bytecodeEl.innerHTML = GestSgm.formatBytecodeHex(sgmBytes, 4);
         } else {
-          const json = await fetchFirst([`data/clips/${slug}.gest.json`, `generated/${slug}.gest.json`, `${slug}.gest.json`]);
-          doc = { fps: json.fps || 60, timeline: json.timeline };
+          const json = await fetchFirst([
+            `${DEMO}data/clips/${slug}.gest.json`,
+            `${DEMO}generated/${slug}.gest.json`,
+            `${DEMO}${slug}.gest.json`,
+          ]);
+          applyDoc({ fps: json.fps || 60, timeline: json.timeline },
+            `JSON loaded · ${slug}`);
           sgmBytes = null;
           decodeUs = 0;
           webglDecodeEl.textContent = "JSON path";
           webglBytesEl.textContent = `${JSON.stringify(json).length.toLocaleString()} B JSON`;
           bytecodeEl.textContent = "JSON source — switch to .sgm to see real bytecode";
         }
-        scrub.max = doc.timeline[doc.timeline.length-1].t || 1;
-        scrub.value = 0; offset = 0; start = performance.now(); playing = true;
-        playBtn.textContent = "Pause";
-        statusEl.textContent = `${sourceMode === "sgm" ? "SGM decoded in browser" : "JSON loaded"} · ${slug}`;
       } catch (e) {
-        statusEl.textContent = `load failed: ${e.message}`;
         console.error(e);
+        applyDoc(FALLBACK_DOC, `fallback clip (asset load failed: ${e.message})`);
+        webglDecodeEl.textContent = "fallback";
+        webglBytesEl.textContent = "embedded XR arc";
+        bytecodeEl.textContent = "Could not fetch clip — using embedded fallback motion";
       }
     }
 
@@ -461,6 +497,7 @@
     }
 
     function render(now) {
+      if (!gl) { requestAnimationFrame(render); return; }
       gl.clearColor(.03,.05,.08,1);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.enable(gl.DEPTH_TEST);
@@ -499,8 +536,8 @@
     srcSgmBtn.onclick = () => setSource("sgm");
     srcJsonBtn.onclick = () => setSource("json");
 
-    fetchFirst(["data/comparison-stats.json","out/comparison-stats.json"]).then(s => { comparisonStats = s; renderStats(); });
-    fetchFirst(["data/industry-benchmark.json","out/industry-benchmark.json"]).then(renderIndustry);
+    fetchFirst([`${DEMO}data/comparison-stats.json`, `${DEMO}out/comparison-stats.json`]).then(s => { comparisonStats = s; renderStats(); }).catch(() => {});
+    fetchFirst([`${DEMO}data/industry-benchmark.json`, `${DEMO}out/industry-benchmark.json`]).then(renderIndustry).catch(() => {});
 
     loadScenario(activeSlug);
     requestAnimationFrame(render);
