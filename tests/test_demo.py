@@ -83,6 +83,8 @@ def test_vercel_landing_page_links_demo_github_and_stats():
     assert "viewBox=\"0 0 16 16\"" in html
     assert "27/28" in html
     assert "1,562 B" in html
+    assert "testgest" in html
+    assert "38" in html
 
 
 def test_hosted_industry_benchmark_page_exists():

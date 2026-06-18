@@ -85,21 +85,24 @@
     <h1>.gest Breakthrough Lab</h1>
     <p>
       A non-semantic gesture IR that validates motion, compiles to SGM bytecode,
-      decodes back for debugging, and plays on a WebGL avatar.
+      decodes back for debugging, and replays on WebGL and Unity mannequin runtimes.
     </p>
     <div class="actions">
       <a class="button" href="/demo/avatar_3d_viewer">Open WebGL demo</a>
       <a class="button secondary" href="/docs/industry-benchmark">Industry benchmark</a>
+      <a class="button secondary" href="https://github.com/KamilBourouiba/testgest">Unity project</a>
     </div>
     <div class="stats">
       <div class="stat"><strong>27/28</strong><span>SGM byte-size wins against generated industry-like baselines</span></div>
-      <div class="stat"><strong>33</strong><span>tests passing for validation, demos, importers, and benchmarks</span></div>
+      <div class="stat"><strong>38</strong><span>tests passing — validation, demos, importers, benchmarks, Unity assets</span></div>
       <div class="stat"><strong>4</strong><span>benchmark scenarios: XR, robot teleop, rehab, dataset microclip</span></div>
-      <div class="stat"><strong>1,562 B</strong><span>SGM bytecode size for the XR dual-hand demo clip</span></div>
+      <div class="stat"><strong>Unity</strong><span>C# SGM decoder + mannequin demo in public testgest repo</span></div>
     </div>
     <p>
       Important caveat: one tiny BVH-like text microclip is slightly smaller
-      than <code>.sgm</code>. The project documents that exception instead of hiding it.
+      than <code>.sgm</code> (1,778 B vs 1,755 B). The project documents that
+      exception instead of hiding it. XR dual-hand SGM is <strong>1,562 B</strong>;
+      robot teleop is <strong>1,211 B</strong>.
     </p>
   </main>
 </body>

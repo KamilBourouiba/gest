@@ -174,6 +174,7 @@ See [`docs/profiles.md`](docs/profiles.md) and validating examples under [`examp
 | [`examples/imports/`](examples/imports/) | Sample MediaPipe/OpenXR/BVH-like source inputs for importers |
 | [`examples/profiles/`](examples/profiles/) | Validating examples for each profile |
 | [`demo/`](demo/) | Runnable XR-style dual-hand demo: generate `.gest`, compile `.sgm`, decode, recover |
+| [`unity/GestDemo/`](unity/GestDemo/) | Unity runtime: C# SGM decoder, mannequin demo, measured HUD — live project: [testgest](https://github.com/KamilBourouiba/testgest) |
 | [`src/gest/`](src/gest/) | Loaders, validation, compile / decode / lossy recovery |
 
 ---
@@ -267,6 +268,16 @@ gest-sgm-to-gest demo/out/xr_dual_hand_arc.sgm demo/out/recovered_from_cli.gest.
 ```
 
 This is a concrete example of the intended loop: **author / capture motion → validate IR → compile bytecode → debug or recover from bytecode**.
+
+### Unity runtime demo
+
+Public engine proof: **[github.com/KamilBourouiba/testgest](https://github.com/KamilBourouiba/testgest)** — Unity 6 project with a procedural mannequin driven by the same SGM bytecode as the WebGL lab. See [`unity/GestDemo/README.md`](unity/GestDemo/README.md).
+
+```bash
+./unity/prepare_assets.sh
+```
+
+Copy `unity/GestDemo/Scripts` into your Unity project `Assets/Scripts/Gest`, then press Play — `GestDemoBootstrap` spawns a **mannequin demo** that decodes **SGM v1** in C# (constants aligned with `include/sgm_v1.h`). Press **N** to switch between measured benchmark clips (XR dual-hand, robot teleop). The on-screen HUD reports loaded bytes, decode microseconds, and compact-JSON ratio — same evidence contract as the WebGL demo.
 
 ---
 
@@ -369,6 +380,7 @@ Tests cover schema validation, IR invariants, YAML loading, SGM compile/decode, 
 | SGM v1 wire layout & recovery caveats | Spec §16–§18 |
 | Research artifact draft | [`docs/research-paper.md`](docs/research-paper.md) |
 | Industry-facing benchmark | [`docs/industry-benchmark.md`](docs/industry-benchmark.md) |
+| Unity integration | [`unity/GestDemo/README.md`](unity/GestDemo/README.md) |
 | Reproducibility manifest | [`docs/research-artifact-manifest.md`](docs/research-artifact-manifest.md) |
 
 ---

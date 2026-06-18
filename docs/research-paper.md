@@ -19,7 +19,7 @@ The design intentionally separates motion from meaning. A `.gest` file can encod
 3. SGM v1, a compact bytecode target with shared Python and C constants, plus round-trip decoding tools for debugging.
 4. Importers for MediaPipe-like JSON, OpenXR-like JSON, and BVH-like text inputs.
 5. A reproducible benchmark suite across XR, robot teleoperation, rehabilitation, and dataset microclip scenarios.
-6. Visual artifacts: cinematic MP4 rendering, 2D avatar playback, and a dependency-free WebGL 3D breakthrough lab.
+6. Visual artifacts: cinematic MP4 rendering, 2D avatar playback, a dependency-free WebGL 3D breakthrough lab, and a **Unity 6 mannequin runtime** with native C# SGM decoding ([testgest](https://github.com/KamilBourouiba/testgest)).
 
 ## Reference Pipeline
 
@@ -72,6 +72,7 @@ The breakthrough direction is to treat gesture motion like code: parse it, valid
 - SGM v1 currently targets a small opcode set focused on articulated joints, state indices, directions, and frame boundaries.
 - Compression is deliberately simple; delta coding, quantization, and streaming chunk formats are design targets, not complete production implementations.
 - The WebGL avatar is a dependency-free demo rig, not a production retargeting engine.
+- The Unity mannequin is a procedural rig driven by the same channels; it demonstrates engine integration, not production retargeting to Humanoid/XR Hands.
 - The BVH comparison is a BVH-like text baseline generated from the same samples, not an official DCC exporter.
 
 ## Reproducibility
