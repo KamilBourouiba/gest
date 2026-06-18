@@ -15,12 +15,12 @@ namespace Gest.Runtime
 
             var demo = new GameObject("GestDemo");
             demo.AddComponent<GestPlayer>();
-            demo.AddComponent<GestMannequinVisualizer>();
+            demo.AddComponent<GestHumanoidVisualizer>();
             demo.AddComponent<GestDemoHud>();
 
             GestDemoEnvironment.Ensure();
 
-            Debug.Log("[Gest] Auto-bootstrapped GestDemo with mannequin. SGM bytecode playback is ready.");
+            Debug.Log("[Gest] Auto-bootstrapped GestDemo with humanoid IK (or procedural fallback).");
         }
     }
 }

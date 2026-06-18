@@ -47,6 +47,12 @@ This copies:
 
 The player loads `xr_dual_hand_arc.sgm` by default, decodes it once, then samples the timeline every frame.
 
+### Real humanoid (Xbot)
+
+1. Ensure `Assets/GestDemo/Models/mannequin.glb` is present (copied from `demo/assets/`).
+2. Menu **Gest → Build Mannequin Prefab** (creates `Resources/GestXbot.prefab` with IK pass).
+3. Press **Play** — `GestHumanoidVisualizer` uses Humanoid IK; procedural capsules are the fallback if the prefab is missing.
+
 ### 4. Switch source
 
 On `GestPlayer`:
@@ -84,7 +90,9 @@ Adjust in `GestSpace.cs` if your avatar root uses a different convention.
 | `GestClip.cs` | In-memory clip + sampling |
 | `GestJsonLoader.cs` | Optional JSON load via `JsonUtility` |
 | `GestPlayer.cs` | Load, decode, play loop |
-| `GestMannequinVisualizer.cs` | Procedural 3D mannequin (default demo) |
+| `GestHumanoidVisualizer.cs` | Rigged Xbot humanoid + Humanoid IK (preferred) |
+| `GestHumanoidIkDriver.cs` | IK goals for hands and gaze |
+| `GestMannequinVisualizer.cs` | Procedural 3D mannequin (fallback) |
 | `GestRigVisualizer.cs` | Wireframe rig lines + joint markers |
 | `GestRigPose.cs` | Shared skeleton landmarks from .gest channels |
 | `GestDemoEnvironment.cs` | Ground plane + camera framing |

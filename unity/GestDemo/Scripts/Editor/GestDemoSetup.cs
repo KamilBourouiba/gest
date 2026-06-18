@@ -37,7 +37,7 @@ public static class GestDemoSetup
 
         var demo = new GameObject("GestDemo");
         demo.AddComponent<GestPlayer>();
-        demo.AddComponent<GestMannequinVisualizer>();
+        demo.AddComponent<GestHumanoidVisualizer>();
         demo.AddComponent<GestDemoHud>();
 
         GestDemoEnvironment.Ensure();

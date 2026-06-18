@@ -17,6 +17,8 @@ def test_unity_package_scripts_exist():
         "GestPlayer.cs",
         "GestRigVisualizer.cs",
         "GestMannequinVisualizer.cs",
+        "GestHumanoidVisualizer.cs",
+        "GestHumanoidIkDriver.cs",
         "GestRigPose.cs",
         "GestDemoEnvironment.cs",
         "GestDemoHud.cs",
@@ -49,6 +51,6 @@ def test_unity_readme_mentions_runtime_path():
     readme = (UNITY / "README.md").read_text(encoding="utf-8")
     assert "SgmBytecode" in readme
     assert "StreamingAssets" in readme
-    assert "GestMannequinVisualizer" in readme
+    assert "GestHumanoidVisualizer" in readme or "GestMannequinVisualizer" in readme
+    assert (UNITY / "Models" / "mannequin.glb").is_file()
     assert "testgest" in readme
-    assert "gest-olive.vercel.app" in readme

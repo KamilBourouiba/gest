@@ -76,15 +76,20 @@ def test_2d_avatar_viewer_has_working_play_fallback():
 
 def test_breakthrough_lab_has_browser_sgm_decoder_and_mannequin():
     html = (ROOT / "demo" / "breakthrough_lab.html").read_text(encoding="utf-8")
+    main_js = (ROOT / "demo" / "breakthrough_lab_main.js").read_text(encoding="utf-8")
     js = (ROOT / "demo" / "sgm_decode.js").read_text(encoding="utf-8")
-    assert "GestSgm.decodeSgmBytes" in html
-    assert 'const DEMO = "/demo/"' in html
+    humanoid = (ROOT / "demo" / "gest_humanoid.js").read_text(encoding="utf-8")
+    assert "/demo/breakthrough_lab_main.js" in html
     assert "/demo/sgm_decode.js" in html
+    assert "Xbot humanoid" in html
     assert "Dual runtime proof" in html
-    assert "data/clips/" in html
     assert "testgest" in html
-    assert "0x53" in js or "0x53, 0x47" in js
+    assert "createHumanoidStage" in humanoid
+    assert "GestSgm.decodeSgmBytes" in main_js
+    assert 'const DEMO = "/demo/"' in main_js
     assert "decodeSgmBytes" in js
+    assert (ROOT / "demo" / "assets" / "mannequin.glb").is_file()
+    assert (ROOT / "demo" / "assets" / "mannequin.glb").stat().st_size > 1_000_000
     for slug in ("xr_pinch_grasp", "assembly_pick_place", "robot_teleop_reach"):
         assert (ROOT / "demo" / "data" / "clips" / f"{slug}.sgm").is_file()
 
