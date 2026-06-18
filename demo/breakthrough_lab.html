@@ -8,7 +8,8 @@
   <style>
     :root { --accent: #9fffc0; --cyan: #64d8ff; --bg: #060910; --panel: rgba(8,12,20,.9); }
     html, body { margin: 0; height: 100%; background: var(--bg); color: #e8eef8; font: 14px system-ui, sans-serif; overflow: hidden; }
-    canvas { width: 100vw; height: 100vh; display: block; }
+    canvas { width: 100vw; height: 100vh; display: block; touch-action: none; cursor: grab; }
+    canvas:active { cursor: grabbing; }
     #intro {
       position: fixed; inset: 0; z-index: 10; display: grid; place-items: center;
       background: radial-gradient(ellipse at 50% 30%, #0f1a2e 0%, var(--bg) 65%);

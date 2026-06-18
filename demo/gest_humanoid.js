@@ -1,10 +1,13 @@
 /**
- * Xbot skinned mesh driven by .gest wrist/gaze channels (CCD IK on real bones).
+ * Xbot skinned mesh driven by .gest wrist channels (CCD IK on arm bones).
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-const GEST_TO_THREE = new THREE.Vector3(1, 1, -1);
+// Match Unity: GestSpace (x,y,-z) + model Y=180° → (-x,y,-z) in Three without rotating the mesh.
+const GEST_TO_THREE = new THREE.Vector3(-1, 1, -1);
+const MAX_IK_STEP = 0.42;
 const _p0 = new THREE.Vector3();
 const _p1 = new THREE.Vector3();
 const _invQ = new THREE.Quaternion();
@@ -15,7 +18,6 @@ const _axis = new THREE.Vector3();
 const _dq = new THREE.Quaternion();
 const _lw = new THREE.Vector3();
 const _rw = new THREE.Vector3();
-const _gaze = new THREE.Vector3();
 
 const loader = new GLTFLoader();
 
@@ -36,8 +38,9 @@ function ccdArmIk(effector, links, targetWorld, iterations = 10) {
       _eff.subVectors(_p1, _p0).applyQuaternion(_invQ).normalize();
       _tgt.subVectors(targetWorld, _p0).applyQuaternion(_invQ).normalize();
       let dot = Math.max(-1, Math.min(1, _eff.dot(_tgt)));
-      const angle = Math.acos(dot);
+      let angle = Math.acos(dot);
       if (angle < 1e-5) continue;
+      angle = Math.min(angle, j === 0 ? MAX_IK_STEP : MAX_IK_STEP * 0.85);
       _axis.crossVectors(_eff, _tgt);
       if (_axis.lengthSq() < 1e-8) continue;
       _axis.normalize();
@@ -77,6 +80,22 @@ export function createHumanoidStage(canvas) {
   const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 40);
   camera.position.set(0.35, 1.42, 2.55);
 
+  const orbitTarget = new THREE.Vector3(0, 1.02, 0);
+  const controls = new OrbitControls(camera, canvas);
+  controls.target.copy(orbitTarget);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+  controls.rotateSpeed = 0.65;
+  controls.minDistance = 1.15;
+  controls.maxDistance = 5.5;
+  controls.maxPolarAngle = Math.PI * 0.92;
+  controls.enablePan = false;
+  controls.mouseButtons = {
+    LEFT: THREE.MOUSE.ROTATE,
+    MIDDLE: THREE.MOUSE.DOLLY,
+    RIGHT: THREE.MOUSE.ROTATE,
+  };
+
   scene.add(new THREE.AmbientLight(0x6a7a9a, 0.55));
   scene.add(new THREE.HemisphereLight(0xd8e8ff, 0x243044, 1.1));
   const key = new THREE.DirectionalLight(0xffffff, 1.65);
@@ -108,7 +127,6 @@ export function createHumanoidStage(canvas) {
   let rightFore = null;
   let leftArm = null;
   let rightArm = null;
-  let headBone = null;
 
   function resize() {
     const w = canvas.clientWidth;
@@ -140,7 +158,8 @@ export function createHumanoidStage(canvas) {
         }
         if (obj.isSkinnedMesh) {
           obj.frustumCulled = false;
-          if (!skinned) skinned = obj;
+          if (obj.name === "Beta_Surface") skinned = obj;
+          else if (!skinned) skinned = obj;
         }
         const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
         for (const mat of mats) {
@@ -163,10 +182,9 @@ export function createHumanoidStage(canvas) {
     rightFore = findBone(modelRoot, "mixamorig:RightForeArm", "mixamorigRightForeArm");
     leftArm = findBone(modelRoot, "mixamorig:LeftArm", "mixamorigLeftArm");
     rightArm = findBone(modelRoot, "mixamorig:RightArm", "mixamorigRightArm");
-    headBone = findBone(modelRoot, "mixamorig:Head", "mixamorigHead");
 
     bindPose = new Map();
-    for (const bone of [leftFore, leftArm, rightFore, rightArm, headBone]) {
+    for (const bone of [leftFore, leftArm, rightFore, rightArm]) {
       if (bone) bindPose.set(bone, bone.quaternion.clone());
     }
 
@@ -175,17 +193,15 @@ export function createHumanoidStage(canvas) {
   }
 
   function applyRig(rig) {
-    if (!loaded || !skeleton) return;
+    if (!loaded || !skeleton || !bindPose) return;
 
     for (const [bone, quat] of bindPose) bone.quaternion.copy(quat);
 
     gestVecInto(rig.lw[0], rig.lw[1], rig.lw[2], _lw);
     gestVecInto(rig.rw[0], rig.rw[1], rig.rw[2], _rw);
-    gestVecInto(rig.gazeEnd[0], rig.gazeEnd[1], rig.gazeEnd[2], _gaze);
 
-    if (leftHand && leftFore && leftArm) ccdArmIk(leftHand, [leftFore, leftArm], _lw, 10);
-    if (rightHand && rightFore && rightArm) ccdArmIk(rightHand, [rightFore, rightArm], _rw, 10);
-    if (headBone) headBone.lookAt(_gaze);
+    if (leftHand && leftFore && leftArm) ccdArmIk(leftHand, [leftFore, leftArm], _lw, 12);
+    if (rightHand && rightFore && rightArm) ccdArmIk(rightHand, [rightFore, rightArm], _rw, 12);
 
     modelRoot.updateMatrixWorld(true);
     skeleton.update();
@@ -193,9 +209,7 @@ export function createHumanoidStage(canvas) {
 
   function render(nowMs, rig) {
     if (disposed) return;
-    const t = nowMs * 0.00012;
-    camera.position.set(0.35 + Math.sin(t) * 0.25, 1.38, 2.55 + Math.cos(t) * 0.18);
-    camera.lookAt(0, 1.02, 0);
+    controls.update();
     if (rig) applyRig(rig);
     renderer.render(scene, camera);
   }
@@ -214,6 +228,7 @@ export function createHumanoidStage(canvas) {
     grid.geometry?.dispose?.();
     if (Array.isArray(grid.material)) grid.material.forEach((m) => m.dispose?.());
     else grid.material?.dispose?.();
+    controls.dispose();
     renderer.dispose();
     scene.clear();
   }
