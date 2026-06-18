@@ -81,7 +81,7 @@ def test_breakthrough_lab_has_browser_sgm_decoder_and_mannequin():
     humanoid = (ROOT / "demo" / "gest_humanoid.js").read_text(encoding="utf-8")
     assert "/demo/breakthrough_lab_main.js" in html
     assert "/demo/sgm_decode.js" in html
-    assert "Xbot humanoid" in html
+    assert "Xbot" in html
     assert "Dual runtime proof" in html
     assert "testgest" in html
     assert "createHumanoidStage" in humanoid

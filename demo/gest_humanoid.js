@@ -1,14 +1,31 @@
 /**
  * Three.js humanoid renderer for .gest clips (Xbot / Mixamo-style rig).
+ * Body: static skinned mesh. Arms: procedural capsules driven by .gest wrists.
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { CCDIKSolver } from "three/addons/animation/CCDIKSolver.js";
 
 const GEST_TO_THREE = new THREE.Vector3(1, 1, -1);
+const _a = new THREE.Vector3();
+const _b = new THREE.Vector3();
+const _dir = new THREE.Vector3();
+const _up = new THREE.Vector3(0, 1, 0);
 
 export function gestVec(x, y, z) {
   return new THREE.Vector3(x, y, z).multiply(GEST_TO_THREE);
+}
+
+function placeCapsule(mesh, from, to) {
+  _dir.subVectors(to, from);
+  const len = _dir.length();
+  if (len < 0.02) {
+    mesh.visible = false;
+    return;
+  }
+  mesh.visible = true;
+  mesh.position.copy(from).addScaledVector(_dir, 0.5);
+  mesh.scale.set(1, len, 1);
+  mesh.quaternion.setFromUnitVectors(_up, _dir.normalize());
 }
 
 export function createHumanoidStage(canvas) {
@@ -33,43 +50,30 @@ export function createHumanoidStage(canvas) {
   const fill = new THREE.DirectionalLight(0x9fd0ff, 0.75);
   fill.position.set(-2.8, 2.4, 1.6);
   scene.add(fill);
-  const rim = new THREE.DirectionalLight(0x64d8ff, 0.55);
-  rim.position.set(-2.5, 2.0, -2.0);
-  scene.add(rim);
-
-  const spot = new THREE.SpotLight(0xffffff, 2.2, 12, Math.PI / 5, 0.35, 1);
-  spot.position.set(0.4, 3.2, 2.8);
-  spot.target.position.set(0, 1.05, 0);
-  scene.add(spot, spot.target);
 
   const floor = new THREE.Mesh(
     new THREE.CircleGeometry(1.1, 48),
     new THREE.MeshStandardMaterial({ color: 0x1c2432, roughness: 0.88, metalness: 0.08 }),
   );
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(0, 0, 0);
   floor.receiveShadow = true;
   scene.add(floor);
 
   const grid = new THREE.GridHelper(2.2, 22, 0x3a4d6a, 0x243044);
-  grid.position.set(0, 0.001, 0);
+  grid.position.y = 0.001;
   scene.add(grid);
 
-  const targets = {
-    left: new THREE.Object3D(),
-    right: new THREE.Object3D(),
-    gaze: new THREE.Object3D(),
-  };
-  scene.add(targets.left, targets.right, targets.gaze);
-
   let modelRoot = null;
-  let skinned = null;
-  let skeleton = null;
-  let bonesByName = new Map();
-  let ikSolver = null;
   let mixer = null;
   let idleAction = null;
   let loaded = false;
+  let shoulderL = null;
+  let shoulderR = null;
+  let elbowL = null;
+  let elbowR = null;
+  let arms = null;
+  let wrists = null;
+  let gazeLine = null;
 
   function resize() {
     const w = canvas.clientWidth;
@@ -79,17 +83,38 @@ export function createHumanoidStage(canvas) {
     camera.updateProjectionMatrix();
   }
 
-  function findBone(...names) {
-    for (const n of names) {
-      const b = bonesByName.get(n);
-      if (b) return b;
-    }
-    return null;
+  function findBone(root, ...names) {
+    let found = null;
+    root.traverse((o) => {
+      if (found || !o.isBone) return;
+      if (names.includes(o.name)) found = o;
+    });
+    return found;
   }
 
-  function boneIndex(...names) {
-    const b = findBone(...names);
-    return b ? skeleton.bones.indexOf(b) : -1;
+  function mkCapsule(color) {
+    const mesh = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.04, 0.18, 6, 12),
+      new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: 0.28,
+        roughness: 0.45,
+        metalness: 0.05,
+        depthTest: false,
+      }),
+    );
+    mesh.renderOrder = 2;
+    return mesh;
+  }
+
+  function mkSphere(color) {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.045, 16, 16),
+      new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.4, depthTest: false }),
+    );
+    mesh.renderOrder = 3;
+    return mesh;
   }
 
   async function loadModel(url) {
@@ -99,76 +124,90 @@ export function createHumanoidStage(canvas) {
       if (obj.isMesh) {
         obj.castShadow = true;
         obj.receiveShadow = true;
-        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        for (const mat of mats) {
-          if (!mat) continue;
-          mat.roughness = Math.min(mat.roughness ?? 0.7, 0.72);
-          mat.metalness = Math.min(mat.metalness ?? 0.1, 0.15);
-        }
       }
     });
 
-    // GLB root Armature already carries scale 0.01 (cm → m). Do not shrink again.
     modelRoot.scale.setScalar(1);
-    modelRoot.position.set(0, 0, 0);
     scene.add(modelRoot);
 
     const box = new THREE.Box3().setFromObject(modelRoot);
     modelRoot.position.y -= box.min.y;
 
-    modelRoot.traverse((o) => {
-      if (o.isSkinnedMesh && !skinned) skinned = o;
-    });
-    if (!skinned) throw new Error("No skinned mesh in mannequin.glb");
-    skeleton = skinned.skeleton;
-    bonesByName = new Map(skeleton.bones.map((b) => [b.name, b]));
+    shoulderL = findBone(modelRoot, "mixamorig:LeftArm", "mixamorigLeftArm");
+    shoulderR = findBone(modelRoot, "mixamorig:RightArm", "mixamorigRightArm");
+    elbowL = findBone(modelRoot, "mixamorig:LeftForeArm", "mixamorigLeftForeArm");
+    elbowR = findBone(modelRoot, "mixamorig:RightForeArm", "mixamorigRightForeArm");
 
     if (gltf.animations?.length) {
       mixer = new THREE.AnimationMixer(modelRoot);
-      const idleClip =
-        gltf.animations.find((c) => /idle/i.test(c.name)) || gltf.animations[0];
+      const idleClip = gltf.animations.find((c) => /idle/i.test(c.name)) || gltf.animations[0];
       idleAction = mixer.clipAction(idleClip);
       idleAction.play();
-      idleAction.setEffectiveWeight(0.35);
+      idleAction.setEffectiveWeight(0.22);
     }
 
-    const ikLinks = [];
-    const addChain = (handNames, foreNames, target) => {
-      const hand = boneIndex(...handNames);
-      const fore = boneIndex(...foreNames);
-      if (hand < 0 || fore < 0) return;
-      ikLinks.push({ index: hand, target });
-      ikLinks.push({ index: fore, target });
+    arms = {
+      lUpper: mkCapsule(0x3aa0e0),
+      lFore: mkCapsule(0x5ec8ff),
+      rUpper: mkCapsule(0xe08040),
+      rFore: mkCapsule(0xffa060),
     };
-    addChain(
-      ["mixamorig:LeftHand", "mixamorigLeftHand"],
-      ["mixamorig:LeftForeArm", "mixamorigLeftForeArm"],
-      targets.left,
-    );
-    addChain(
-      ["mixamorig:RightHand", "mixamorigRightHand"],
-      ["mixamorig:RightForeArm", "mixamorigRightForeArm"],
-      targets.right,
+    wrists = { left: mkSphere(0x64d8ff), right: mkSphere(0xff9f64) };
+    gazeLine = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.012, 0.2, 4, 8),
+      new THREE.MeshStandardMaterial({ color: 0x9fffc0, emissive: 0x4dffb0, emissiveIntensity: 0.35 }),
     );
 
-    ikSolver = new CCDIKSolver(skinned, ikLinks);
+    scene.add(
+      arms.lUpper,
+      arms.lFore,
+      arms.rUpper,
+      arms.rFore,
+      wrists.left,
+      wrists.right,
+      gazeLine,
+    );
+
     loaded = true;
+  }
+
+  function boneWorld(bone, out) {
+    bone.updateWorldMatrix(true, false);
+    return out.setFromMatrixPosition(bone.matrixWorld);
+  }
+
+  function midPoint(a, b, out) {
+    return out.copy(a).add(b).multiplyScalar(0.5);
   }
 
   function applyRig(rig) {
     if (!loaded) return;
 
-    targets.left.position.copy(gestVec(rig.lw[0], rig.lw[1], rig.lw[2]));
-    targets.right.position.copy(gestVec(rig.rw[0], rig.rw[1], rig.rw[2]));
-    targets.gaze.position.copy(gestVec(rig.gazeEnd[0], rig.gazeEnd[1], rig.gazeEnd[2]));
+    const leftWrist = gestVec(rig.lw[0], rig.lw[1], rig.lw[2]);
+    const rightWrist = gestVec(rig.rw[0], rig.rw[1], rig.rw[2]);
+    const gazeEnd = gestVec(rig.gazeEnd[0], rig.gazeEnd[1], rig.gazeEnd[2]);
 
-    const head = findBone("mixamorig:Head", "mixamorigHead");
-    if (head) {
-      head.lookAt(targets.gaze.position);
+    wrists.left.position.copy(leftWrist);
+    wrists.right.position.copy(rightWrist);
+
+    if (shoulderL && elbowL) {
+      const s = boneWorld(shoulderL, _a);
+      const e = boneWorld(elbowL, _b);
+      placeCapsule(arms.lUpper, s, e);
+      placeCapsule(arms.lFore, e, leftWrist);
+    }
+    if (shoulderR && elbowR) {
+      const s = boneWorld(shoulderR, _a);
+      const e = boneWorld(elbowR, _b);
+      placeCapsule(arms.rUpper, s, e);
+      placeCapsule(arms.rFore, e, rightWrist);
     }
 
-    ikSolver?.update();
-    skeleton?.update();
+    const head = findBone(modelRoot, "mixamorig:Head", "mixamorigHead");
+    if (head) {
+      const headPos = boneWorld(head, _a);
+      placeCapsule(gazeLine, headPos, gazeEnd);
+    }
   }
 
   function render(nowMs, rig) {
