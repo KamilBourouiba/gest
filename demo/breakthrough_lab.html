@@ -376,7 +376,7 @@
       for (let i = 0; i < 24; i++) {
         const a0 = i/24*Math.PI*2, a1 = (i+1)/24*Math.PI*2;
         const y = .72, rad = .55, cx = 0, cz = .35;
-        pushTri(mesh, [cx,cy,cz], [cx+Math.cos(a0)*rad,cy,cz+Math.sin(a0)*rad], [cx+Math.cos(a1)*rad,cy,cz+Math.sin(a1)*rad], [0,1,0], C.floor);
+        pushTri(mesh, [cx,y,cz], [cx+Math.cos(a0)*rad,y,cz+Math.sin(a0)*rad], [cx+Math.cos(a1)*rad,y,cz+Math.sin(a1)*rad], [0,1,0], C.floor);
       }
       return mesh;
     }
