@@ -74,8 +74,23 @@ def test_2d_avatar_viewer_has_working_play_fallback():
     assert "setDoc(FALLBACK_DOC" in html
 
 
+def test_breakthrough_lab_has_browser_sgm_decoder_and_mannequin():
+    html = (ROOT / "demo" / "breakthrough_lab.html").read_text(encoding="utf-8")
+    js = (ROOT / "demo" / "sgm_decode.js").read_text(encoding="utf-8")
+    assert "GestSgm.decodeSgmBytes" in html
+    assert "buildMannequin" in html
+    assert "Dual runtime proof" in html
+    assert "data/clips/" in html
+    assert "testgest" in html
+    assert "0x53" in js or "0x53, 0x47" in js
+    assert "decodeSgmBytes" in js
+    for slug in ("xr_dual_hand_arc", "robot_teleop_reach"):
+        assert (ROOT / "demo" / "data" / "clips" / f"{slug}.sgm").is_file()
+
+
 def test_vercel_landing_page_links_demo_github_and_stats():
     html = (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "/demo/breakthrough_lab" in html
     assert "/demo/avatar_3d_viewer" in html
     assert "https://github.com/KamilBourouiba/gest" in html
     assert "github-fab" in html

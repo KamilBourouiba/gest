@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/demo/avatar_3d_viewer.html"
+      "destination": "/demo/breakthrough_lab.html"
     }
   ]
 }

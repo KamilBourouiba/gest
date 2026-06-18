@@ -239,7 +239,9 @@ open http://localhost:8000/demo/avatar_viewer.html
 open http://localhost:8000/demo/avatar_3d_viewer.html
 ```
 
-`avatar_viewer.html` is a 2D canvas rig. `avatar_3d_viewer.html` is a dependency-free **WebGL breakthrough lab** with a perspective camera, orbiting 3D view, live `.gest -> validate -> .sgm -> decode -> avatar` pipeline stages, measured comparison panels, scenario benchmarks, and a bytecode-style stream. Both load `xr_dual_hand_arc.gest.json` and map `left_hand`, `right_hand`, and `gaze` onto a humanoid rig.
+`avatar_viewer.html` is a 2D canvas rig. `avatar_3d_viewer.html` is a dependency-free **WebGL breakthrough lab** with a perspective camera, orbiting 3D view, live `.gest -> validate -> .sgm -> decode -> avatar` pipeline stages, measured comparison panels, scenario benchmarks, and a bytecode-style stream.
+
+**Flagship:** [`demo/breakthrough_lab.html`](demo/breakthrough_lab.html) — cinematic intro, **real SGM decoder in JavaScript**, lit 3D mannequin, 4 benchmark scenarios, dual WebGL+Unity proof panel, and live bytecode hex. This is the Vercel homepage.
 
 Generate real comparison stats from the same clip:
 

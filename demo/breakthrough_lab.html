@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>.gest Breakthrough Lab — SGM in the Browser</title>
+  <meta name="description" content="Non-semantic gesture IR: validate, compile to SGM bytecode, decode in-browser, replay on a 3D mannequin. Measured vs industry baselines. Unity + WebGL dual runtime proof." />
+  <style>
+    :root { --accent: #9fffc0; --cyan: #64d8ff; --bg: #060910; --panel: rgba(8,12,20,.9); }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: #e8eef8; font: 14px system-ui, sans-serif; overflow: hidden; }
+    canvas { width: 100vw; height: 100vh; display: block; }
+    #intro {
+      position: fixed; inset: 0; z-index: 10; display: grid; place-items: center;
+      background: radial-gradient(ellipse at 50% 30%, #0f1a2e 0%, var(--bg) 65%);
+      transition: opacity .9s ease, visibility .9s;
+    }
+    #intro.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    #intro h1 { font-size: clamp(42px, 9vw, 88px); margin: 0; line-height: .92; letter-spacing: -.03em; }
+    #intro h1 span { color: var(--accent); }
+    #intro p { color: #8ea0bc; max-width: 520px; text-align: center; line-height: 1.6; margin: 16px 0 28px; }
+    #intro button {
+      background: linear-gradient(135deg, var(--accent), var(--cyan)); color: #061018;
+      border: 0; border-radius: 999px; padding: 14px 28px; font-weight: 900; font-size: 15px; cursor: pointer;
+      box-shadow: 0 0 60px rgba(159,255,192,.25);
+    }
+    #top { position: fixed; left: 16px; top: 14px; right: 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; z-index: 3; }
+    .chip, .panel {
+      background: var(--panel); border: 1px solid #263149; border-radius: 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.28);
+    }
+    .chip { padding: 8px 12px; font-size: 12px; }
+    .chip strong { color: var(--accent); }
+    #scenarios { position: fixed; left: 16px; bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; z-index: 3; max-width: min(560px, calc(100vw - 32px)); }
+    .scenario-btn {
+      background: #111827; border: 1px solid #33415f; color: #c5d3ea; border-radius: 999px;
+      padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .scenario-btn.on { background: linear-gradient(135deg, #1a3d2e, #12324a); border-color: var(--accent); color: var(--accent); }
+    #deck { position: fixed; right: 16px; top: 72px; width: min(400px, calc(100vw - 32px)); display: grid; gap: 10px; z-index: 3; max-height: calc(100vh - 88px); overflow: auto; }
+    .panel { padding: 10px 12px; }
+    .panel h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+    .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+    .stage { border: 1px solid #263149; border-radius: 6px; padding: 6px 3px; color: #8ea0bc; text-align: center; font-size: 10px; }
+    .stage.on { color: #061018; background: linear-gradient(135deg, var(--accent), var(--cyan)); border-color: transparent; font-weight: 800; }
+    .metric { display: grid; grid-template-columns: 110px 1fr 54px; gap: 8px; align-items: center; margin: 6px 0; font-size: 12px; }
+    .bar { height: 7px; background: #182238; border-radius: 999px; overflow: hidden; }
+    .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+    .dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .runtime { border: 1px solid #263149; border-radius: 8px; padding: 10px; background: #0a1018; }
+    .runtime h3 { margin: 0 0 6px; font-size: 11px; color: var(--cyan); letter-spacing: .08em; text-transform: uppercase; }
+    .runtime .live { color: var(--accent); font-weight: 800; font-size: 22px; }
+    #bytecode { font: 11px ui-monospace, Menlo, monospace; color: var(--cyan); line-height: 1.5; max-height: 88px; overflow: auto; }
+    #bytecode mark { background: #1a3d2e; color: var(--accent); padding: 0 2px; border-radius: 2px; }
+    button, .btn {
+      background: var(--accent); color: #071017; border: 0; border-radius: 6px;
+      padding: 7px 11px; font-weight: 800; cursor: pointer; font-size: 12px;
+    }
+    button.ghost { background: transparent; color: #c5d3ea; border: 1px solid #33415f; }
+    button.on { box-shadow: 0 0 0 2px var(--accent); }
+    a { color: var(--accent); }
+    .muted { color: #8ea0bc; }
+    .proof strong { color: var(--accent); font-size: 26px; }
+    .github-fab {
+      position: fixed; left: 16px; bottom: 72px; z-index: 4;
+      display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px;
+      border-radius: 999px; color: #071017; background: var(--accent); font-weight: 900; text-decoration: none;
+      animation: shake 3.8s ease-in-out infinite;
+    }
+    @keyframes shake {
+      0%, 88%, 100% { transform: translateX(0); }
+      90% { transform: translateX(-2px); }
+      92% { transform: translateX(2px); }
+    }
+    input[type=range] { accent-color: var(--accent); width: 120px; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <div id="intro">
+    <div style="text-align:center;padding:20px">
+      <h1>Gesture motion<br>as <span>bytecode</span></h1>
+      <p>
+        Non-semantic IR → validate → <strong>SGM v1</strong> → decode in your browser →
+        3D mannequin replay. Same artifact runs in <strong>Unity</strong>.
+        Measured against industry-like baselines. No hand-waving.
+      </p>
+      <button id="enter">Enter Breakthrough Lab</button>
+    </div>
+  </div>
+
+  <a class="github-fab" href="https://github.com/KamilBourouiba/gest" target="_blank" rel="noreferrer">GitHub</a>
+
+  <div id="top">
+    <div class="chip"><strong>.gest Breakthrough Lab</strong> · browser SGM decoder + lit mannequin</div>
+    <button id="play">Play</button>
+    <button id="src-sgm" class="on">.sgm bytecode</button>
+    <button id="src-json" class="ghost">.gest JSON</button>
+    <label class="chip muted">t <input id="scrub" type="range" min="0" max="1.2" step="0.001" value="0"></label>
+    <div id="status" class="chip muted">booting…</div>
+  </div>
+
+  <div id="scenarios"></div>
+
+  <div id="deck">
+    <div class="panel">
+      <h2>Dual runtime proof</h2>
+      <div class="dual">
+        <div class="runtime">
+          <h3>WebGL (live)</h3>
+          <div class="live" id="webgl-decode">— µs</div>
+          <div class="muted" id="webgl-bytes">— B SGM</div>
+        </div>
+        <div class="runtime">
+          <h3>Unity 6</h3>
+          <div class="live">same .sgm</div>
+          <div class="muted"><a href="https://github.com/KamilBourouiba/testgest" target="_blank" rel="noreferrer">testgest repo →</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Live pipeline</h2>
+      <div class="pipeline">
+        <div class="stage" id="st-gest">.gest</div>
+        <div class="stage" id="st-val">validate</div>
+        <div class="stage" id="st-compile">compile</div>
+        <div class="stage" id="st-sgm">.sgm</div>
+        <div class="stage" id="st-decode">decode</div>
+        <div class="stage" id="st-avatar">mannequin</div>
+      </div>
+    </div>
+    <div class="panel"><h2>Measured comparison</h2><div id="metrics" class="muted">loading…</div></div>
+    <div class="panel"><h2>Industry proof</h2><div id="industry" class="muted">loading…</div></div>
+    <div class="panel"><h2>Real SGM bytecode</h2><div id="bytecode">53 47 4d 01 …</div></div>
+  </div>
+
+  <canvas id="gl"></canvas>
+  <script src="sgm_decode.js"></script>
+  <script>
+    const SCENARIOS = [
+      { slug: "xr_dual_hand_arc", title: "XR dual-hand", tag: "1.5 KB" },
+      { slug: "robot_teleop_reach", title: "Robot teleop", tag: "1.2 KB" },
+      { slug: "rehab_symmetry_loop", title: "Rehab loop", tag: "3.9 KB" },
+      { slug: "dataset_pose7_microclip", title: "Pose7 micro", tag: "1.8 KB" },
+    ];
+
+    const C = {
+      body: [0.88, 0.92, 0.98], left: [0.32, 0.63, 1.0], right: [1.0, 0.54, 0.30],
+      gaze: [0.62, 1.0, 0.75], floor: [0.10, 0.12, 0.16],
+    };
+
+    const canvas = document.getElementById("gl");
+    const gl = canvas.getContext("webgl", { antialias: true, alpha: false });
+    const intro = document.getElementById("intro");
+    const playBtn = document.getElementById("play");
+    const scrub = document.getElementById("scrub");
+    const statusEl = document.getElementById("status");
+    const bytecodeEl = document.getElementById("bytecode");
+    const metricsEl = document.getElementById("metrics");
+    const industryEl = document.getElementById("industry");
+    const scenariosEl = document.getElementById("scenarios");
+    const webglDecodeEl = document.getElementById("webgl-decode");
+    const webglBytesEl = document.getElementById("webgl-bytes");
+    const stages = ["gest","val","compile","sgm","decode","avatar"].map(s => document.getElementById(`st-${s}`));
+    const srcSgmBtn = document.getElementById("src-sgm");
+    const srcJsonBtn = document.getElementById("src-json");
+
+    let doc = null, playing = true, start = performance.now(), offset = 0;
+    let sourceMode = "sgm", activeSlug = SCENARIOS[0].slug;
+    let sgmBytes = null, decodeUs = 0, comparisonStats = null;
+    let meshBuf = null, meshCount = 0;
+
+    const VERT = `
+      attribute vec3 a_pos; attribute vec3 a_nrm; attribute vec3 a_col;
+      uniform mat4 u_mvp; uniform mat3 u_nrmMat;
+      varying vec3 v_nrm; varying vec3 v_col;
+      void main() {
+        gl_Position = u_mvp * vec4(a_pos, 1.0);
+        v_nrm = u_nrmMat * a_nrm; v_col = a_col;
+      }`;
+    const FRAG = `
+      precision mediump float;
+      varying vec3 v_nrm; varying vec3 v_col;
+      void main() {
+        vec3 n = normalize(v_nrm);
+        float lit = 0.22 + 0.78 * max(0.0, dot(n, normalize(vec3(0.25, 0.95, 0.45))));
+        gl_FragColor = vec4(v_col * lit, 1.0);
+      }`;
+
+    function shader(type, src) {
+      const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, shader(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+    const aPos = gl.getAttribLocation(prog, "a_pos");
+    const aNrm = gl.getAttribLocation(prog, "a_nrm");
+    const aCol = gl.getAttribLocation(prog, "a_col");
+    const uMvp = gl.getUniformLocation(prog, "u_mvp");
+    const uNrmMat = gl.getUniformLocation(prog, "u_nrmMat");
+
+    function resize() {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      canvas.width = Math.floor(innerWidth * dpr);
+      canvas.height = Math.floor(innerHeight * dpr);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    addEventListener("resize", resize); resize();
+
+    const add = (a,b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]];
+    const sub = (a,b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
+    const scale = (a,s) => [a[0]*s, a[1]*s, a[2]*s];
+    const dot = (a,b) => a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+    const cross = (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+    const len = a => Math.hypot(a[0], a[1], a[2]);
+    const norm = a => { const n = len(a)||1; return [a[0]/n, a[1]/n, a[2]/n]; };
+    const lerp = (a,b,u) => a+(b-a)*u;
+    const lerp3 = (a,b,u) => [lerp(a[0],b[0],u), lerp(a[1],b[1],u), lerp(a[2],b[2],u)];
+    const mid = (a,b,u=.5) => lerp3(a,b,u);
+
+    function handPts(frame, ch) {
+      const v = frame.pose[ch]?.joints?.values || [];
+      const out = [];
+      for (let i = 0; i < v.length; i += 3) out.push([v[i], v[i+1], -v[i+2]]);
+      return out;
+    }
+
+    function samplePose(t) {
+      const f = doc.timeline;
+      if (t <= f[0].t) return frameToPose(f[0]);
+      if (t >= f[f.length-1].t) return frameToPose(f[f.length-1]);
+      for (let i = 0; i < f.length - 1; i++) {
+        const a = f[i], b = f[i+1];
+        if (a.t <= t && t <= b.t) {
+          const u = (t - a.t) / (b.t - a.t);
+          return lerpPose(frameToPose(a), frameToPose(b), u);
+        }
+      }
+      return frameToPose(f[0]);
+    }
+
+    function frameToPose(fr) {
+      const gaze = fr.pose.gaze?.dir || [0,0,1];
+      return {
+        left: handPts(fr, "left_hand"),
+        right: handPts(fr, "right_hand"),
+        gaze: [gaze[0], gaze[1], -gaze[2]],
+      };
+    }
+
+    function lerpPose(a, b, u) {
+      const lp = (pa, pb) => pa.map((p,i) => lerp3(p, pb[i] || p, u));
+      const n = Math.max(a.left.length, b.left.length);
+      const left = [], right = [];
+      for (let i = 0; i < n; i++) {
+        if (a.left[i] && b.left[i]) left.push(lerp3(a.left[i], b.left[i], u));
+        if (a.right[i] && b.right[i]) right.push(lerp3(a.right[i], b.right[i], u));
+      }
+      return { left, right, gaze: lerp3(a.gaze, b.gaze, u) };
+    }
+
+    function rig(pose) {
+      const pelvis = [0, .92, .05], chest = [0, 1.28, .08], neck = [0, 1.50, .05], head = [0, 1.64, .03];
+      const ls = [-.22, 1.42, .08], rs = [.22, 1.42, .08];
+      const lw = pose.left[0] || mid(ls, [.1,1.1,.3], .5);
+      const rw = pose.right[0] || mid(rs, [-.1,1.1,.3], .5);
+      const le = mid(ls, lw, .55), re = mid(rs, rw, .55);
+      return {
+        pelvis, chest, neck, head, ls, rs, le, re, lw, rw,
+        lhip: add(pelvis, [-.10, -.02, .01]), rhip: add(pelvis, [.10, -.02, .01]),
+        lknee: add(pelvis, [-.10, -.44, .04]), rknee: add(pelvis, [.10, -.44, .04]),
+        lankle: add(pelvis, [-.10, -.86, .04]), rankle: add(pelvis, [.10, -.86, .04]),
+        gazeEnd: add(head, scale(norm(pose.gaze), .55)),
+        pose,
+      };
+    }
+
+    function pushTri(arr, p0, p1, p2, n, col) {
+      for (const p of [p0,p1,p2]) {
+        arr.push(p[0],p[1],p[2], n[0],n[1],n[2], col[0],col[1],col[2]);
+      }
+    }
+
+    function pushCylinder(mesh, a, b, radius, col, seg = 12) {
+      const d = sub(b, a); const L = len(d); if (L < 1e-4) return;
+      const up = Math.abs(d[1]) < .9 ? [0,1,0] : [1,0,0];
+      const x = norm(cross(up, d)); const y = cross(d, x);
+      const ring = (t, center) => {
+        const pts = [];
+        for (let i = 0; i < seg; i++) {
+          const ang = i / seg * Math.PI * 2;
+          pts.push(add(center, add(scale(x, Math.cos(ang)*radius), scale(y, Math.sin(ang)*radius))));
+        }
+        return pts;
+      };
+      const r0 = ring(0, a), r1 = ring(0, b);
+      const sideN = norm(cross(x, y));
+      for (let i = 0; i < seg; i++) {
+        const j = (i+1) % seg;
+        pushTri(mesh, r0[i], r1[i], r1[j], sideN, col);
+        pushTri(mesh, r0[i], r1[j], r0[j], sideN, col);
+      }
+    }
+
+    function pushSphere(mesh, c, radius, col, seg = 10, stack = 8) {
+      for (let i = 0; i < stack; i++) {
+        const v0 = (i / stack) * Math.PI, v1 = ((i+1) / stack) * Math.PI;
+        for (let j = 0; j < seg; j++) {
+          const u0 = (j / seg) * Math.PI * 2, u1 = ((j+1) / seg) * Math.PI * 2;
+          const sp = (u,v) => [
+            c[0] + radius * Math.cos(u) * Math.sin(v),
+            c[1] + radius * Math.cos(v),
+            c[2] + radius * Math.sin(u) * Math.sin(v),
+          ];
+          const p00 = sp(u0,v0), p10 = sp(u1,v0), p01 = sp(u0,v1), p11 = sp(u1,v1);
+          pushTri(mesh, p00, p10, p11, norm(sub(p00,c)), col);
+          pushTri(mesh, p00, p11, p01, norm(sub(p00,c)), col);
+        }
+      }
+    }
+
+    function buildMannequin(t) {
+      const pose = samplePose(t);
+      const r = rig(pose);
+      const mesh = [];
+      pushCylinder(mesh, r.pelvis, r.chest, .11, C.body);
+      pushCylinder(mesh, r.chest, r.neck, .10, C.body);
+      pushCylinder(mesh, r.neck, r.head, .06, C.body);
+      pushSphere(mesh, r.head, .095, C.body);
+      pushCylinder(mesh, r.ls, r.rs, .05, C.body);
+      pushCylinder(mesh, r.lhip, r.lknee, .052, C.body);
+      pushCylinder(mesh, r.rhip, r.rknee, .052, C.body);
+      pushCylinder(mesh, r.lknee, r.lankle, .045, C.body);
+      pushCylinder(mesh, r.rknee, r.rankle, .045, C.body);
+      pushCylinder(mesh, r.ls, r.le, .045, C.left);
+      pushCylinder(mesh, r.le, r.lw, .042, C.left);
+      pushCylinder(mesh, r.rs, r.re, .045, C.right);
+      pushCylinder(mesh, r.re, r.rw, .042, C.right);
+      for (let i = 1; i < pose.left.length; i++) pushCylinder(mesh, r.lw, pose.left[i], .014, C.left);
+      for (let i = 1; i < pose.right.length; i++) pushCylinder(mesh, r.rw, pose.right[i], .014, C.right);
+      pushCylinder(mesh, r.head, r.gazeEnd, .012, C.gaze);
+      pushSphere(mesh, r.gazeEnd, .022, C.gaze, 8, 6);
+      // floor disc
+      for (let i = 0; i < 24; i++) {
+        const a0 = i/24*Math.PI*2, a1 = (i+1)/24*Math.PI*2;
+        const y = .72, rad = .55, cx = 0, cz = .35;
+        pushTri(mesh, [cx,cy,cz], [cx+Math.cos(a0)*rad,cy,cz+Math.sin(a0)*rad], [cx+Math.cos(a1)*rad,cy,cz+Math.sin(a1)*rad], [0,1,0], C.floor);
+      }
+      return mesh;
+    }
+
+    function mat4Perspective(fovy, aspect, near, far) {
+      const f = 1/Math.tan(fovy/2), nf = 1/(near-far);
+      return [f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,2*far*near*nf,0];
+    }
+    function mat4LookAt(eye, center, up) {
+      const z = norm(sub(eye, center)), x = norm(cross(up, z)), y = cross(z, x);
+      return [x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0, -dot(x,eye),-dot(y,eye),-dot(z,eye),1];
+    }
+    function mat4Mul(a,b) {
+      const o = new Array(16).fill(0);
+      for (let c=0;c<4;c++) for (let r=0;r<4;r++) for (let k=0;k<4;k++) o[c*4+r]+=a[k*4+r]*b[c*4+k];
+      return o;
+    }
+    function mat3FromMat4(m) { return [m[0],m[1],m[2], m[4],m[5],m[6], m[8],m[9],m[10]]; }
+
+    function fmtBytes(n) { return n >= 1024 ? `${(n/1024).toFixed(1)} KB` : `${n} B`; }
+
+    function fetchFirst(paths, asJson = true) {
+      return paths.reduce((chain, p) => chain.catch(() =>
+        fetch(p).then(r => { if (!r.ok) throw new Error(p); return asJson ? r.json() : r.arrayBuffer(); })
+      ), Promise.reject());
+    }
+
+    async function loadScenario(slug) {
+      activeSlug = slug;
+      document.querySelectorAll(".scenario-btn").forEach(btn => btn.classList.toggle("on", btn.dataset.slug === slug));
+      statusEl.textContent = `loading ${slug}…`;
+      try {
+        if (sourceMode === "sgm") {
+          const buf = await fetchFirst([
+            `data/clips/${slug}.sgm`, `out/${slug}.sgm`
+          ], false);
+          const t0 = performance.now();
+          const decoded = GestSgm.decodeSgmBytes(new Uint8Array(buf));
+          const timeline = GestSgm.decodedToTimeline(decoded);
+          decodeUs = Math.round(performance.now() - t0);
+          sgmBytes = decoded.bytes;
+          doc = { fps: decoded.fps, timeline };
+          webglDecodeEl.textContent = `${decodeUs.toLocaleString()} µs`;
+          webglBytesEl.textContent = `${sgmBytes.length.toLocaleString()} B SGM · ${timeline.length} frames`;
+          bytecodeEl.innerHTML = GestSgm.formatBytecodeHex(sgmBytes, 4 + (Math.floor(offset*10)%sgmBytes.length));
+        } else {
+          const json = await fetchFirst([`data/clips/${slug}.gest.json`, `generated/${slug}.gest.json`, `${slug}.gest.json`]);
+          doc = { fps: json.fps || 60, timeline: json.timeline };
+          sgmBytes = null;
+          decodeUs = 0;
+          webglDecodeEl.textContent = "JSON path";
+          webglBytesEl.textContent = `${JSON.stringify(json).length.toLocaleString()} B JSON`;
+          bytecodeEl.textContent = "JSON source — switch to .sgm to see real bytecode";
+        }
+        scrub.max = doc.timeline[doc.timeline.length-1].t || 1;
+        scrub.value = 0; offset = 0; start = performance.now(); playing = true;
+        playBtn.textContent = "Pause";
+        statusEl.textContent = `${sourceMode === "sgm" ? "SGM decoded in browser" : "JSON loaded"} · ${slug}`;
+      } catch (e) {
+        statusEl.textContent = `load failed: ${e.message}`;
+        console.error(e);
+      }
+    }
+
+    function renderStats() {
+      if (!comparisonStats) return;
+      const art = n => comparisonStats.artifacts?.find(x => x.name === n);
+      const rows = [".sgm v1 bytecode",".gest JSON compact","Landmark JSON baseline","BVH-like text baseline"].map(art).filter(Boolean);
+      const maxB = Math.max(...rows.map(r => r.bytes));
+      metricsEl.innerHTML = rows.map(r => {
+        const pct = Math.max(4, r.bytes / maxB * 100);
+        return `<div class="metric"><span>${r.name.replace(".gest JSON compact",".gest")}</span><div class="bar"><span style="width:${pct}%"></span></div><strong>${fmtBytes(r.bytes)}</strong></div>`;
+      }).join("");
+    }
+
+    function renderIndustry(stats) {
+      const wins = stats.scenarios.reduce((s,sc) => s + sc.sgm_smaller_than.length, 0);
+      const total = stats.scenarios.reduce((s,sc) => s + sc.artifacts.length - 1, 0);
+      industryEl.innerHTML = `<div class="proof"><strong>${wins}/${total}</strong> SGM wins vs industry-like baselines</div>
+        <div class="muted" style="margin-top:6px">Exception documented: pose7 BVH-like microclip.</div>
+        <div style="margin-top:6px"><a href="/docs/industry-benchmark">Full benchmark →</a></div>`;
+    }
+
+    SCENARIOS.forEach(sc => {
+      const btn = document.createElement("button");
+      btn.className = "scenario-btn" + (sc.slug === activeSlug ? " on" : "");
+      btn.dataset.slug = sc.slug;
+      btn.textContent = `${sc.title} · ${sc.tag}`;
+      btn.onclick = () => loadScenario(sc.slug);
+      scenariosEl.appendChild(btn);
+    });
+
+    function updatePipeline(t, max) {
+      const phase = Math.min(stages.length-1, Math.floor((t/max)*stages.length));
+      stages.forEach((el,i) => el.classList.toggle("on", i <= phase));
+      if (sgmBytes) {
+        const pulse = 4 + Math.floor((t/max) * (sgmBytes.length-5));
+        bytecodeEl.innerHTML = GestSgm.formatBytecodeHex(sgmBytes, pulse);
+      }
+    }
+
+    function draw(mesh) {
+      if (!meshBuf) meshBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, meshBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh), gl.DYNAMIC_DRAW);
+      const stride = 9 * 4;
+      gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, stride, 0);
+      gl.enableVertexAttribArray(aNrm); gl.vertexAttribPointer(aNrm, 3, gl.FLOAT, false, stride, 12);
+      gl.enableVertexAttribArray(aCol); gl.vertexAttribPointer(aCol, 3, gl.FLOAT, false, stride, 24);
+      meshCount = mesh.length / 9;
+      gl.drawArrays(gl.TRIANGLES, 0, meshCount);
+    }
+
+    function render(now) {
+      gl.clearColor(.03,.05,.08,1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST);
+      if (doc) {
+        const max = doc.timeline[doc.timeline.length-1].t || 1;
+        const t = playing ? (((now-start)/1000 + offset) % max) : Number(scrub.value);
+        scrub.value = t;
+        updatePipeline(t, max);
+        const ang = now * .00018;
+        const eye = [Math.sin(ang)*2.1, 1.38, Math.cos(ang)*2.1 + .5];
+        const vp = mat4Mul(mat4Perspective(Math.PI/4, canvas.width/canvas.height, .05, 20), mat4LookAt(eye, [0,1.18,.3], [0,1,0]));
+        gl.uniformMatrix4fv(uMvp, false, new Float32Array(vp));
+        gl.uniformMatrix3fv(uNrmMat, false, new Float32Array(mat3FromMat4(vp)));
+        draw(buildMannequin(t));
+      }
+      requestAnimationFrame(render);
+    }
+
+    document.getElementById("enter").onclick = () => intro.classList.add("hide");
+    setTimeout(() => intro.classList.add("hide"), 4500);
+
+    playBtn.onclick = () => {
+      playing = !playing; playBtn.textContent = playing ? "Pause" : "Play";
+      offset = Number(scrub.value); start = performance.now();
+    };
+    scrub.oninput = () => { playing = false; playBtn.textContent = "Play"; };
+
+    function setSource(mode) {
+      sourceMode = mode;
+      srcSgmBtn.classList.toggle("on", mode === "sgm");
+      srcJsonBtn.classList.toggle("on", mode === "json");
+      srcSgmBtn.classList.toggle("ghost", mode !== "sgm");
+      srcJsonBtn.classList.toggle("ghost", mode !== "json");
+      loadScenario(activeSlug);
+    }
+    srcSgmBtn.onclick = () => setSource("sgm");
+    srcJsonBtn.onclick = () => setSource("json");
+
+    fetchFirst(["data/comparison-stats.json","out/comparison-stats.json"]).then(s => { comparisonStats = s; renderStats(); });
+    fetchFirst(["data/industry-benchmark.json","out/industry-benchmark.json"]).then(renderIndustry);
+
+    loadScenario(activeSlug);
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

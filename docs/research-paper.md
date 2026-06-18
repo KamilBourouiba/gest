@@ -19,7 +19,7 @@ The design intentionally separates motion from meaning. A `.gest` file can encod
 3. SGM v1, a compact bytecode target with shared Python and C constants, plus round-trip decoding tools for debugging.
 4. Importers for MediaPipe-like JSON, OpenXR-like JSON, and BVH-like text inputs.
 5. A reproducible benchmark suite across XR, robot teleoperation, rehabilitation, and dataset microclip scenarios.
-6. Visual artifacts: cinematic MP4 rendering, 2D avatar playback, a dependency-free WebGL 3D breakthrough lab, and a **Unity 6 mannequin runtime** with native C# SGM decoding ([testgest](https://github.com/KamilBourouiba/testgest)).
+6. Visual artifacts: cinematic MP4 rendering, 2D avatar playback, a dependency-free WebGL 3D breakthrough lab with **in-browser SGM decoding**, and a **Unity 6 mannequin runtime** with native C# SGM decoding ([testgest](https://github.com/KamilBourouiba/testgest)).
 
 ## Reference Pipeline
 
